@@ -26,7 +26,7 @@ verification_index:
     H100: verified
     GB200: verified
   fsdp:
-    GB200: unverified
+    GB200: verified
 model:
   hf_id: PUBLIC_HF_ID_PENDING
   hf_revision: PUBLIC_HF_REVISION_PENDING
@@ -600,8 +600,9 @@ items:
 
   pretrain_fsdp:
     GB200:
-      status: unverified
+      status: verified
       precision: fp8_mx
+      bridge_commit: 887cc28b462d0b61b30f2372079efd50cfeab023  # pragma: allowlist secret
       command: >
         ./scripts/training/train.sh --wait --nodes 8 --gpus-per-node 4
         --recipe nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config
@@ -610,17 +611,20 @@ items:
         --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/fsdp
         --save_interval 10 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null dist.distributed_timeout_minutes=120
-      last_verified: null
+      last_verified: 2026-07-24
       metrics:
-        initial_loss: null
-        final_loss: null
-        last_10_steps_step_time_ms_avg: null
-        last_10_steps_model_tflops_per_gpu_avg: null
+        initial_loss: 12.191150
+        final_loss: 8.146253
+        last_10_steps_step_time_ms_avg: 12415.890
+        last_10_steps_model_tflops_per_gpu_avg: 9.110
       expected_result: >
-        The 32-GPU GB200 MXFP8 run must complete exactly 10 finite-loss
-        optimizer steps with active MTP-1 and MTP-2 losses, no skipped or NaN
-        iterations, all four metrics recorded, and a complete fsdp_dtensor
-        checkpoint at step 10.
+        On eight complete four-GPU GB200 nodes, the MXFP8 FSDP run completes
+        exactly 10 finite-loss optimizer steps with active MTP-1 and MTP-2
+        losses, no skipped or NaN iterations, and LM loss 12.191150 ->
+        8.146253. Steps 1-10, including first-step compilation, average
+        12,415.890 ms / 9.110 TFLOP/s/GPU. The step-10 fsdp_dtensor checkpoint
+        contains all 32 rank shards, metadata, run config, train state, and the
+        latest-iteration marker.
 
   pretrain_performance:
     H100:
