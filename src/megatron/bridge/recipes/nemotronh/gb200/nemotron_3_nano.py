@@ -18,10 +18,11 @@ import torch
 
 from megatron.bridge import AutoBridge
 from megatron.bridge.recipes.common import _pretrain_common
+from megatron.bridge.recipes.utils.environment_utils import COMMON_RECIPE_ENV_VARS
 from megatron.bridge.training.comm_overlap import CommOverlapConfig
 from megatron.bridge.training.config import ConfigContainer
-from megatron.bridge.training.mixed_precision import get_mixed_precision_config
-from megatron.bridge.utils.cuda_graph import set_cuda_graph_modules
+from megatron.bridge.training.mixed_precision import bf16_with_mxfp8_mixed, get_mixed_precision_config
+from megatron.bridge.utils.cuda_graph import clear_cuda_graph_modules, set_cuda_graph_modules
 
 
 _NEMOTRON_3_NANO_MODEL_ID = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"
@@ -136,6 +137,80 @@ def nemotron_3_nano_pretrain_8gpu_gb200_bf16_config() -> ConfigContainer:
     return cfg
 
 
+def nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config() -> ConfigContainer:
+    """Return the 32-GPU GB200 MXFP8 FSDP pretraining verification config.
+
+    This bounded recipe exercises Nemotron 3 Nano with MTP under Megatron FSDP
+    on eight four-GPU GB200 nodes. It uses mock data and writes an
+    ``fsdp_dtensor`` checkpoint after ten iterations.
+
+    Returns:
+        GB200 MXFP8 FSDP pretraining verification configuration.
+    """
+    cfg = nemotron_3_nano_pretrain_8gpu_gb200_bf16_config()
+
+    cfg.model.mtp_num_layers = 2
+    cfg.model.mtp_hybrid_override_pattern = "*E"
+    cfg.model.mtp_use_repeated_layer = True
+    cfg.model.keep_mtp_spec_in_bf16 = True
+    cfg.model.mtp_loss_scaling_factor = 0.3
+    cfg.tokenizer.tokenizer_model = "placeholder"
+
+    cfg.model.seq_length = 512
+    cfg.dataset.seq_length = 512
+    cfg.model.tensor_model_parallel_size = 1
+    cfg.model.pipeline_model_parallel_size = 1
+    cfg.model.pipeline_model_parallel_layout = None
+    cfg.model.virtual_pipeline_model_parallel_size = None
+    cfg.model.context_parallel_size = 1
+    cfg.model.sequence_parallel = False
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.expert_model_parallel_size = 8
+
+    cfg.model.cuda_graph_impl = "none"
+    clear_cuda_graph_modules(cfg.model)
+    cfg.model.use_te_rng_tracker = False
+    cfg.rng.te_rng_tracker = False
+
+    cfg.train.train_iters = 10
+    cfg.train.global_batch_size = 32
+    cfg.train.micro_batch_size = 1
+    cfg.validation.eval_interval = 0
+    cfg.validation.eval_iters = 0
+    cfg.scheduler.lr_warmup_iters = 1
+    cfg.scheduler.lr_decay_iters = 10
+    cfg.logger.log_interval = 1
+
+    cfg.mixed_precision = bf16_with_mxfp8_mixed()
+    cfg.mixed_precision.reuse_grad_buf_for_mxfp8_param_ag = False
+
+    cfg.dist.use_megatron_fsdp = True
+    cfg.ddp.use_megatron_fsdp = True
+    cfg.ddp.num_distributed_optimizer_instances = 1
+    cfg.ddp.data_parallel_sharding_strategy = "optim_grads_params"
+    cfg.ddp.average_in_collective = False
+    cfg.ddp.reuse_grad_buf_for_mxfp8_param_ag = False
+    cfg.optimizer.reuse_grad_buf_for_mxfp8_param_ag = False
+
+    cfg.checkpoint.load = None
+    cfg.checkpoint.ckpt_format = "fsdp_dtensor"
+    cfg.checkpoint.save_interval = 10
+    cfg.checkpoint.async_save = False
+
+    cfg.env_vars = {
+        **COMMON_RECIPE_ENV_VARS,
+        "CUDA_DEVICE_MAX_CONNECTIONS": 32,
+        "NUM_OF_HYBRID_EP_RANKS_PER_NVLINK_DOMAIN": 8,
+        "NUM_OF_TOKENS_PER_CHUNK_COMBINE_API": 128,
+        "NVLINK_DOMAIN_SIZE": 72,
+        "USE_MNNVL": 1,
+        "NVTE_BWD_LAYERNORM_SM_MARGIN": 20,
+        "NVTE_FWD_LAYERNORM_SM_MARGIN": 20,
+    }
+
+    return cfg
+
+
 # NeMo-CI appends ``_pretrain_config`` to MODEL_RECIPE_NAME. This explicit
 # alias lets the GB200 release case select the hardware recipe without changing
 # the legacy ``nemotron_3_nano_pretrain_config`` default.
@@ -144,5 +219,6 @@ nemotron_3_nano_gb200_pretrain_config = nemotron_3_nano_pretrain_8gpu_gb200_bf16
 
 __all__ = [
     "nemotron_3_nano_gb200_pretrain_config",
+    "nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config",
     "nemotron_3_nano_pretrain_8gpu_gb200_bf16_config",
 ]

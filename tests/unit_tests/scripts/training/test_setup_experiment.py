@@ -212,6 +212,43 @@ def test_parser_consumes_repeatable_srun_args():
     assert training_args == ["--recipe", "gpt_oss_20b_pretrain_config"]
 
 
+def test_parser_consumes_segment():
+    module = _load_setup_experiment_module()
+
+    args, training_args = module.parse_args(
+        [
+            "--segment",
+            "8",
+            "--recipe",
+            "gpt_oss_20b_pretrain_config",
+        ]
+    )
+
+    assert args.segment == 8
+    assert training_args == ["--recipe", "gpt_oss_20b_pretrain_config"]
+
+
+def test_segment_must_be_positive():
+    module = _load_setup_experiment_module()
+    args, _ = module.parse_args(
+        [
+            "--gpus-per-node",
+            "4",
+            "--account",
+            "account",
+            "--partition",
+            "partition",
+            "--container-image",
+            "image.sqsh",
+            "--segment",
+            "0",
+        ]
+    )
+
+    with pytest.raises(ValueError, match="--segment must be at least 1"):
+        module._validate_args(args)
+
+
 @pytest.mark.parametrize("option", ["-lmc", "--peak-mem-clk", "--peak_mem_clk"])
 def test_parser_consumes_peak_mem_clk(option):
     module = _load_setup_experiment_module()
@@ -484,6 +521,39 @@ def test_benchmark_slurm_executor_uses_the_generic_cluster_policy(tmp_path, monk
     assert "launcher" not in executor.kwargs
     assert "segment" not in executor.kwargs
     assert set(executor.container_env) == {"PYTHONPATH"}
+
+
+def test_slurm_executor_forwards_segment_as_an_allocation_parameter(tmp_path, monkeypatch):
+    module = _load_setup_experiment_module()
+
+    class _SlurmExecutor:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    module.run.LocalTunnel = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    module.run.Packager = object
+    module.run.SlurmExecutor = _SlurmExecutor
+    monkeypatch.setattr(module, "get_nemorun_home", lambda: str(tmp_path))
+    args, _ = module.parse_args(
+        [
+            "--nodes",
+            "8",
+            "--gpus-per-node",
+            "4",
+            "--account",
+            "account",
+            "--partition",
+            "partition",
+            "--container-image",
+            "image.sqsh",
+            "--segment",
+            "8",
+        ]
+    )
+
+    executor = module._build_executor(args, [], [])
+
+    assert executor.additional_parameters == {"export": "PATH", "segment": 8}
 
 
 def test_training_task_environment_does_not_inject_benchmark_offline_defaults():

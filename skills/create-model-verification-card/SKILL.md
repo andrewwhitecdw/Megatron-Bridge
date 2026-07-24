@@ -69,6 +69,11 @@ exported, omit the item instead of adding an unverified placeholder. Once a
 canonical recipe exists, keep the item in the card even if its run is still
 unverified.
 
+Add `pretrain_fsdp` as an optional hardware-scoped item when a first-class
+Megatron FSDP recipe exists for the exact model variant. Keep this functional
+checkpointing verification separate from both ordinary `pretrain` and tuned
+`pretrain_performance` results.
+
 A concrete `pretrain_performance.<hardware>` leaf means a tuned canonical
 performance recipe exists for that hardware. Its item status states whether
 the card's benchmark run has been verified; an `unverified` leaf still records
@@ -106,19 +111,19 @@ items:
 
 The hardware-scoped names are `pretrain`, `sft`, `sft_export_inference`,
 `sft_long_context`, `peft`, `checkpoint_resume`, and optional
-`pretrain_performance`. Use canonical public accelerator identifiers such as
-`H100`, `B200`, or `GB200`, never a private cluster name. The validator's
-public-hardware allowlist is authoritative and must be updated when a new
-accelerator target is introduced. The hardware key replaces the old `gpu_type`
-field. Each hardware leaf is independent and must carry its own status plus the
-command or commands, date, metrics, features, and optional commit override that
-apply to that item. Dependencies resolve within the same hardware key:
-`checkpoint_resume.H100` consumes `pretrain.H100`, and
-`sft_export_inference.H100` consumes `sft.H100`. Never fall back across
-hardware targets. Use the reserved key `all` only as the sole leaf for a
-model-wide `unsupported` or `not_applicable` limitation. A terminal dependency
-leaf still names its logical dependency but does not require a matching `all`
-or concrete-hardware dependency leaf.
+`pretrain_performance` and `pretrain_fsdp`. Use canonical public accelerator
+identifiers such as `H100`, `B200`, or `GB200`, never a private cluster name.
+The validator's public-hardware allowlist is authoritative and must be updated
+when a new accelerator target is introduced. The hardware key replaces the old
+`gpu_type` field. Each hardware leaf is independent and must carry its own
+status plus the command or commands, date, metrics, features, and optional
+commit override that apply to that item. Dependencies resolve within the same
+hardware key: `checkpoint_resume.H100` consumes `pretrain.H100`, and
+`sft_export_inference.H100` consumes `sft.H100`. Never fall back across hardware
+targets. Use the reserved key `all` only as the sole leaf for a model-wide
+`unsupported` or `not_applicable` limitation. A terminal dependency leaf still
+names its logical dependency but does not require a matching `all` or
+concrete-hardware dependency leaf.
 
 Use only `unverified`, `verified`, `unsupported`, or `not_applicable`. Do not
 add `smoke` or an evidence field.
@@ -135,7 +140,9 @@ Use `model_level` for the six direct items: the four conversion directions,
 hardware-scoped items: `pretrain`, `sft`, `sft_export_inference`,
 `sft_long_context`, `peft`, and `checkpoint_resume`. Keep the optional
 `pretrain_performance` item separate under `performance`; omit `performance`
-when the card has no canonical performance recipe.
+when the card has no canonical performance recipe. Keep optional
+`pretrain_fsdp` leaves separate under `fsdp`; omit `fsdp` when the card has no
+FSDP recipe.
 
 Group item names under the same four status names used by the detailed items.
 For an explicitly indexed hardware target with no corresponding item leaf,
@@ -172,6 +179,13 @@ When a canonical performance recipe exists, mirror only its concrete leaves:
 ```yaml
   performance:
     H100: verified
+```
+
+When an FSDP recipe exists, mirror only its concrete leaves:
+
+```yaml
+  fsdp:
+    GB200: verified
 ```
 
 The index may declare an allowlisted public hardware target such as `GB200`

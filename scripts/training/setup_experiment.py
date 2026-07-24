@@ -74,6 +74,11 @@ Arguments not owned by this launcher are forwarded unchanged to run_recipe.py.
     execution.add_argument("--account", default=os.environ.get("SLURM_ACCOUNT"), help="Slurm account.")
     execution.add_argument("--partition", default=os.environ.get("SLURM_PARTITION"), help="Slurm partition.")
     execution.add_argument("--time", default="04:00:00", help="Slurm time limit.")
+    execution.add_argument(
+        "--segment",
+        type=int,
+        help="Optional Slurm segment size for topology-aware allocation.",
+    )
     execution.add_argument("--gres", help="Optional Slurm GRES value.")
     execution.add_argument(
         "--no-gpu-resource-request",
@@ -174,6 +179,8 @@ def _validate_args(
         raise ValueError("--nodes must be at least 1.")
     if args.gpus_per_node is None or args.gpus_per_node < 1:
         raise ValueError("--gpus-per-node is required and must be at least 1.")
+    if args.segment is not None and args.segment < 1:
+        raise ValueError("--segment must be at least 1.")
     if not args.account or not args.partition:
         raise ValueError("Slurm execution requires --account and --partition.")
     if not args.container_image:
@@ -274,6 +281,8 @@ def _build_executor(
     # forwarding the host PATH into the training container.
     slurm_env_names = list(dict.fromkeys(["PATH", *env_names]))
     executor.additional_parameters = {"export": ",".join(slurm_env_names)}
+    if args.segment is not None:
+        executor.additional_parameters["segment"] = args.segment
     executor.srun_args = srun_args
     return executor
 

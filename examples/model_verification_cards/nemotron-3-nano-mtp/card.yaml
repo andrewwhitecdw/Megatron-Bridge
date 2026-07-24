@@ -25,6 +25,8 @@ verification_index:
   performance:
     H100: verified
     GB200: verified
+  fsdp:
+    GB200: unverified
 model:
   hf_id: PUBLIC_HF_ID_PENDING
   hf_revision: PUBLIC_HF_REVISION_PENDING
@@ -595,6 +597,30 @@ items:
         7.901844 and 7.196219 match uninterrupted losses 7.901846 and 7.196970
         at steps 11 and 20 within the declared tolerance, with finite LM/MTP-1/
         MTP-2 losses and no skipped or NaN iterations.
+
+  pretrain_fsdp:
+    GB200:
+      status: unverified
+      precision: fp8_mx
+      command: >
+        ./scripts/training/train.sh --wait --nodes 8 --gpus-per-node 4
+        --recipe nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config
+        --mode pretrain --dataset mock --max_steps 10
+        tokenizer.tokenizer_model=PUBLIC_HF_ID_PENDING
+        --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/fsdp
+        --save_interval 10 logger.log_interval=1 logger.log_throughput=true
+        logger.tensorboard_dir=null dist.distributed_timeout_minutes=120
+      last_verified: null
+      metrics:
+        initial_loss: null
+        final_loss: null
+        last_10_steps_step_time_ms_avg: null
+        last_10_steps_model_tflops_per_gpu_avg: null
+      expected_result: >
+        The 32-GPU GB200 MXFP8 run must complete exactly 10 finite-loss
+        optimizer steps with active MTP-1 and MTP-2 losses, no skipped or NaN
+        iterations, all four metrics recorded, and a complete fsdp_dtensor
+        checkpoint at step 10.
 
   pretrain_performance:
     H100:

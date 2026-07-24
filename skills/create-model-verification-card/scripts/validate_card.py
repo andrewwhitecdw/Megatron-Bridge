@@ -52,7 +52,7 @@ REQUIRED_ITEM_NAMES = (
     "peft",
     "checkpoint_resume",
 )
-OPTIONAL_ITEM_NAMES = ("pretrain_performance",)
+OPTIONAL_ITEM_NAMES = ("pretrain_performance", "pretrain_fsdp")
 ITEM_NAMES = REQUIRED_ITEM_NAMES + OPTIONAL_ITEM_NAMES
 MODEL_LEVEL_INDEX_SCOPE = (
     "hf_to_megatron_cpu",
@@ -71,7 +71,15 @@ TRAINING_INDEX_SCOPE = (
     "checkpoint_resume",
 )
 TRAINING_ITEMS = frozenset(
-    {"pretrain", "sft", "sft_long_context", "peft", "checkpoint_resume", "pretrain_performance"}
+    {
+        "pretrain",
+        "sft",
+        "sft_long_context",
+        "peft",
+        "checkpoint_resume",
+        "pretrain_performance",
+        "pretrain_fsdp",
+    }
 )
 HARDWARE_SCOPED_ITEMS = TRAINING_ITEMS | {"sft_export_inference"}
 PUBLIC_HARDWARE_KEYS = frozenset(
@@ -113,7 +121,7 @@ UNTUNED_PERFORMANCE_DISCLAIMER = (
 )
 
 TOP_LEVEL_KEYS = frozenset({"title", "model", "verification_environment", "summary", "verification_index", "items"})
-VERIFICATION_INDEX_KEYS = frozenset({"model_level", "training", "performance"})
+VERIFICATION_INDEX_KEYS = frozenset({"model_level", "training", "performance", "fsdp"})
 MODEL_KEYS = frozenset({"hf_id", "hf_revision", "architecture", "min_transformers_version"})
 ENVIRONMENT_KEYS = frozenset({"base_container", "bridge_commit"})
 ITEM_KEYS = frozenset(
@@ -479,48 +487,45 @@ def _validate_verification_index(
                 errors=errors,
             )
 
-    performance_path = (*path, "performance")
-    performance_variants = {
-        hardware: item
-        for hardware, item in hardware_groups.get("pretrain_performance", {}).items()
-        if hardware != "all"
-    }
-    if not performance_variants:
-        if "performance" in verification_index:
-            errors.append(
-                f"{_pointer(*performance_path)}: omit performance when pretrain_performance has no concrete leaves"
-            )
-        return
-    if "performance" not in verification_index:
-        errors.append(f"{_pointer(*performance_path)}: required to mirror pretrain_performance concrete leaves")
-        return
-
-    performance = _as_mapping(verification_index.get("performance"), path=performance_path, errors=errors)
-    if performance is None:
-        return
-    expected_hardware = set(performance_variants)
-    actual_hardware = set(performance)
-    for hardware in sorted(actual_hardware):
-        if hardware not in PUBLIC_HARDWARE_KEYS:
-            errors.append(
-                f"{_pointer(*performance_path, str(hardware))}: expected a supported public hardware key; "
-                f"choose from {sorted(PUBLIC_HARDWARE_KEYS)}"
-            )
-    for hardware in sorted(expected_hardware - actual_hardware):
-        errors.append(f"{_pointer(*performance_path, hardware)}: required to mirror pretrain_performance.{hardware}")
-    for hardware in sorted(actual_hardware - expected_hardware):
-        errors.append(f"{_pointer(*performance_path, hardware)}: no matching pretrain_performance.{hardware} leaf")
-    for hardware in sorted(expected_hardware & actual_hardware):
-        indexed_status = performance.get(hardware)
-        if not isinstance(indexed_status, str) or indexed_status not in STATUSES:
-            errors.append(f"{_pointer(*performance_path, hardware)}: expected one of {sorted(STATUSES)}")
+    for index_name, item_name in (("performance", "pretrain_performance"), ("fsdp", "pretrain_fsdp")):
+        index_path = (*path, index_name)
+        variants = {
+            hardware: item for hardware, item in hardware_groups.get(item_name, {}).items() if hardware != "all"
+        }
+        if not variants:
+            if index_name in verification_index:
+                errors.append(f"{_pointer(*index_path)}: omit {index_name} when {item_name} has no concrete leaves")
             continue
-        expected_status = _item_status(performance_variants[hardware])
-        if expected_status is not None and indexed_status != expected_status:
-            errors.append(
-                f"{_pointer(*performance_path, hardware)}: indexed as {indexed_status} but "
-                f"pretrain_performance.{hardware} is {expected_status}"
-            )
+        if index_name not in verification_index:
+            errors.append(f"{_pointer(*index_path)}: required to mirror {item_name} concrete leaves")
+            continue
+
+        index = _as_mapping(verification_index.get(index_name), path=index_path, errors=errors)
+        if index is None:
+            continue
+        expected_hardware = set(variants)
+        actual_hardware = set(index)
+        for hardware in sorted(actual_hardware):
+            if hardware not in PUBLIC_HARDWARE_KEYS:
+                errors.append(
+                    f"{_pointer(*index_path, str(hardware))}: expected a supported public hardware key; "
+                    f"choose from {sorted(PUBLIC_HARDWARE_KEYS)}"
+                )
+        for hardware in sorted(expected_hardware - actual_hardware):
+            errors.append(f"{_pointer(*index_path, hardware)}: required to mirror {item_name}.{hardware}")
+        for hardware in sorted(actual_hardware - expected_hardware):
+            errors.append(f"{_pointer(*index_path, hardware)}: no matching {item_name}.{hardware} leaf")
+        for hardware in sorted(expected_hardware & actual_hardware):
+            indexed_status = index.get(hardware)
+            if not isinstance(indexed_status, str) or indexed_status not in STATUSES:
+                errors.append(f"{_pointer(*index_path, hardware)}: expected one of {sorted(STATUSES)}")
+                continue
+            expected_status = _item_status(variants[hardware])
+            if expected_status is not None and indexed_status != expected_status:
+                errors.append(
+                    f"{_pointer(*index_path, hardware)}: indexed as {indexed_status} but "
+                    f"{item_name}.{hardware} is {expected_status}"
+                )
 
 
 def _is_iso_date(value: Any) -> bool:
