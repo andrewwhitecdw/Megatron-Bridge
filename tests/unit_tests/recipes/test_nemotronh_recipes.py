@@ -160,7 +160,7 @@ def test_nemotron_3_nano_mtp_gb200_fsdp_verification_defaults():
 
     assert cfg.model.seq_length == 512
     assert cfg.dataset.seq_length == 512
-    assert cfg.train.train_iters == 10
+    assert cfg.train.train_iters == 50
     assert cfg.train.global_batch_size == 32
     assert cfg.train.micro_batch_size == 1
     assert cfg.model.tensor_model_parallel_size == 1
@@ -180,7 +180,8 @@ def test_nemotron_3_nano_mtp_gb200_fsdp_verification_defaults():
     assert cfg.ddp.data_parallel_sharding_strategy == "optim_grads_params"
     assert cfg.ddp.average_in_collective is False
     assert cfg.checkpoint.ckpt_format == "fsdp_dtensor"
-    assert cfg.checkpoint.save_interval == 10
+    assert cfg.scheduler.lr_decay_iters == 50
+    assert cfg.checkpoint.save_interval == 50
     assert cfg.env_vars["CUDA_DEVICE_MAX_CONNECTIONS"] == 32
     assert cfg.env_vars["NUM_OF_HYBRID_EP_RANKS_PER_NVLINK_DOMAIN"] == 8
 

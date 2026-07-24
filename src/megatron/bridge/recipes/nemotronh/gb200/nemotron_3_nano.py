@@ -142,7 +142,7 @@ def nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config() -> ConfigContai
 
     This bounded recipe exercises Nemotron 3 Nano with MTP under Megatron FSDP
     on eight four-GPU GB200 nodes. It uses mock data and writes an
-    ``fsdp_dtensor`` checkpoint after ten iterations.
+    ``fsdp_dtensor`` checkpoint after fifty iterations.
 
     Returns:
         GB200 MXFP8 FSDP pretraining verification configuration.
@@ -172,13 +172,13 @@ def nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config() -> ConfigContai
     cfg.model.use_te_rng_tracker = False
     cfg.rng.te_rng_tracker = False
 
-    cfg.train.train_iters = 10
+    cfg.train.train_iters = 50
     cfg.train.global_batch_size = 32
     cfg.train.micro_batch_size = 1
     cfg.validation.eval_interval = 0
     cfg.validation.eval_iters = 0
     cfg.scheduler.lr_warmup_iters = 1
-    cfg.scheduler.lr_decay_iters = 10
+    cfg.scheduler.lr_decay_iters = 50
     cfg.logger.log_interval = 1
 
     cfg.mixed_precision = bf16_with_mxfp8_mixed()
@@ -194,7 +194,7 @@ def nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config() -> ConfigContai
 
     cfg.checkpoint.load = None
     cfg.checkpoint.ckpt_format = "fsdp_dtensor"
-    cfg.checkpoint.save_interval = 10
+    cfg.checkpoint.save_interval = 50
     cfg.checkpoint.async_save = False
 
     cfg.env_vars = {
