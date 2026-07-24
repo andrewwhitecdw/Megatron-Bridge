@@ -21,6 +21,7 @@ from megatron.bridge.perf_recipes.nemotronh.b300.nemotronh import (
 from megatron.bridge.perf_recipes.nemotronh.gb200.nemotronh import (
     nemotron_3_nano_mtp_pretrain_8gpu_gb200_bf16_config,
     nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_config,
+    nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config,
     nemotron_3_nano_mtp_pretrain_8gpu_gb200_nvfp4_config,
     nemotron_3_nano_pretrain_8gpu_gb200_bf16_config,
     nemotron_3_nano_pretrain_8gpu_gb200_fp8mx_config,

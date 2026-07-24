@@ -602,35 +602,46 @@ items:
     GB200:
       status: verified
       precision: fp8_mx
-      bridge_commit: 039084be86393a4ae5e7282d01df3a516d0a266b  # pragma: allowlist secret
+      bridge_commit: 968ab25dd0e8b76801e757ee9976d9806af9c11a  # pragma: allowlist secret
+      enabled_features:
+        moe_dispatcher: hybridep
+        megatron_fsdp: optim_grads_params
+        cuda_graphs: disabled
       command: >
-        ./scripts/training/train.sh --wait --nodes 8 --gpus-per-node 4
-        --segment 8
-        --recipe nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config
-        --mode pretrain --dataset mock --max_steps 50
+        ./scripts/training/train.sh --wait --nodes 2 --gpus-per-node 4
+        --segment 2
+        --recipe nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config
+        --mode pretrain --max_steps 20
         tokenizer.tokenizer_model=PUBLIC_HF_ID_PENDING
-        --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/fsdp
-        --save_interval 50 logger.log_interval=1 logger.log_throughput=true
-        logger.tensorboard_dir=null dist.distributed_timeout_minutes=120
       last_verified: 2026-07-24
       metrics:
-        initial_loss: 12.190510
-        final_loss: 1.746802
-        last_10_steps_step_time_ms_avg: 1565.970
-        last_10_steps_model_tflops_per_gpu_avg: 10.700
+        initial_loss: 12.18152
+        final_loss: 3.913218
+        last_10_steps_step_time_ms_avg: 13917.000
+        last_10_steps_model_tflops_per_gpu_avg: 795.390
+        peak_allocated_memory_gib: 169.54
+        peak_reserved_memory_gib: 173.86
+      matched_non_fsdp_comparison:
+        cuda_graphs: disabled
+        global_batch_size: 384
+        micro_batch_size: 3
+        last_10_steps_step_time_ms_avg: 12661.000
+        last_10_steps_model_tflops_per_gpu_avg: 874.150
+        peak_allocated_memory_gib: 175.29
+        peak_reserved_memory_gib: 180.65
+        fsdp_throughput_delta_percent: -9.01
+        fsdp_reserved_memory_delta_gib: -6.79
       expected_result: >
-        On eight complete four-GPU GB200 nodes, the MXFP8 FSDP run completes
-        exactly 50 finite-loss optimizer steps in one segment-8 NVLink domain
-        with active MTP-1 and MTP-2 losses, no skipped or NaN iterations, and
-        LM loss 12.190510 -> 1.746802. Steps 41-50 average 1,565.970 ms /
-        10.700 TFLOP/s/GPU. This is 1.33% of the tuned non-FSDP BF16 result
-        (803.180 TFLOP/s/GPU), but is not an isolated FSDP-overhead comparison:
-        that baseline uses 8 GPUs, sequence length 8,192, GBS/MBS 512/2,
-        forced-balanced routing, and Transformer Engine CUDA graphs, while this
-        verification uses 32 GPUs, sequence length 512, GBS/MBS 32/1,
-        natural routing, and no CUDA graphs. The step-50 fsdp_dtensor checkpoint
-        contains all 32 rank shards, metadata, run config, train state, and the
-        latest-iteration marker.
+        On two complete four-GPU GB200 nodes in one segment-2 NVLink domain,
+        the sequence-length-8,192 MXFP8 FSDP recipe completes exactly 20
+        finite-loss optimizer steps with GBS/MBS 384/3, active MTP-1 and MTP-2
+        losses, and no skipped or NaN iterations. Steps 11-20 average
+        13,917.000 ms / 795.390 TFLOP/s/GPU. Against the otherwise matched
+        non-FSDP, no-CUDA-graph control, FSDP uses 6.79 GiB less peak reserved
+        memory and is 9.01% slower. Increasing the FSDP microbatch from two to
+        three improves throughput by 29.24%; fixed and max-pool double buffering
+        regress throughput, and Transformer Engine CUDA graphs are incompatible
+        with FSDP module hooks.
 
   pretrain_performance:
     H100:

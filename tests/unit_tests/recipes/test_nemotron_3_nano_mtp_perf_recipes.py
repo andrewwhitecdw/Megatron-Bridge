@@ -22,6 +22,7 @@ import pytest
 from megatron.bridge.perf_recipes.nemotronh import (
     nemotron_3_nano_mtp_pretrain_8gpu_gb200_bf16_config,
     nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_config,
+    nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config,
     nemotron_3_nano_mtp_pretrain_8gpu_gb200_nvfp4_config,
     nemotron_3_nano_mtp_pretrain_16gpu_h100_bf16_config,
     nemotron_3_nano_mtp_pretrain_16gpu_h100_fp8cs_config,
@@ -45,6 +46,7 @@ _GB200_RECIPES = (
     nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_config,
     nemotron_3_nano_mtp_pretrain_8gpu_gb200_nvfp4_config,
 )
+_GB200_FSDP_RECIPES = (nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config,)
 _NON_MTP_RECIPES = (
     nemotron_3_nano_pretrain_16gpu_h100_bf16_config,
     nemotron_3_nano_pretrain_16gpu_h100_fp8cs_config,
@@ -83,7 +85,11 @@ def test_standard_perf_recipes_do_not_expose_mtp_flag(recipe_factory: Callable[[
     assert recipe_factory().model.mtp_num_layers == 0
 
 
-@pytest.mark.parametrize("recipe_factory", (*_H100_RECIPES, *_GB200_RECIPES), ids=lambda recipe: recipe.__name__)
+@pytest.mark.parametrize(
+    "recipe_factory",
+    (*_H100_RECIPES, *_GB200_RECIPES, *_GB200_FSDP_RECIPES),
+    ids=lambda recipe: recipe.__name__,
+)
 def test_perf_recipes_enable_mtp(recipe_factory: Callable[[], ConfigContainer]) -> None:
     """Each MTP performance variant preserves the shared Nano MTP block."""
     cfg = recipe_factory()
@@ -140,3 +146,27 @@ def test_gb200_perf_recipe_topology(recipe_factory: Callable[[], ConfigContainer
     assert cfg.model.recompute_granularity is None
     assert cfg.env_vars["NVLINK_DOMAIN_SIZE"] == 72
     assert cfg.env_vars["USE_MNNVL"] == 1
+
+
+def test_gb200_fsdp_perf_recipe_defaults() -> None:
+    """The GB200 FSDP variant retains its measured 8-GPU performance settings."""
+    cfg = nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config()
+
+    assert cfg.train.global_batch_size == 384
+    assert cfg.train.micro_batch_size == 3
+    assert cfg.model.cuda_graph_impl == "none"
+    assert cfg.model.cuda_graph_scope == []
+    assert cfg.model.init_model_with_meta_device is True
+
+    assert cfg.mixed_precision.reuse_grad_buf_for_mxfp8_param_ag is False
+    assert cfg.dist.use_megatron_fsdp is True
+    assert cfg.ddp.use_megatron_fsdp is True
+    assert cfg.ddp.num_distributed_optimizer_instances == 1
+    assert cfg.ddp.data_parallel_sharding_strategy == "optim_grads_params"
+    assert cfg.ddp.outer_dp_sharding_strategy == "no_shard"
+    assert cfg.ddp.average_in_collective is False
+    assert cfg.ddp.keep_fp8_transpose_cache is False
+    assert cfg.ddp.reuse_grad_buf_for_mxfp8_param_ag is False
+    assert cfg.optimizer.reuse_grad_buf_for_mxfp8_param_ag is False
+    assert cfg.checkpoint.load is None
+    assert cfg.checkpoint.ckpt_format == "fsdp_dtensor"

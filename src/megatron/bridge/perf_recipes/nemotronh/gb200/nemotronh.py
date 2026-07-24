@@ -382,6 +382,35 @@ def nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_config() -> ConfigContainer:
     return cfg
 
 
+def nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config() -> ConfigContainer:
+    """Nemotron 3 Nano with MTP pretrain: 8× GB200, MXFP8, Megatron FSDP."""
+    cfg = nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_config()
+
+    # FSDP reduces the model-state footprint enough to use the larger measured
+    # microbatch. Megatron FSDP registers module hooks that Transformer Engine
+    # CUDA graph capture rejects.
+    cfg.train.global_batch_size = 384
+    cfg.train.micro_batch_size = 3
+    cfg.model.cuda_graph_impl = "none"
+    cfg.model.cuda_graph_scope = []
+
+    cfg.model.init_model_with_meta_device = True
+    cfg.mixed_precision.reuse_grad_buf_for_mxfp8_param_ag = False
+    cfg.dist.use_megatron_fsdp = True
+    cfg.ddp.use_megatron_fsdp = True
+    cfg.ddp.num_distributed_optimizer_instances = 1
+    cfg.ddp.data_parallel_sharding_strategy = "optim_grads_params"
+    cfg.ddp.outer_dp_sharding_strategy = "no_shard"
+    cfg.ddp.average_in_collective = False
+    cfg.ddp.keep_fp8_transpose_cache = False
+    cfg.ddp.reuse_grad_buf_for_mxfp8_param_ag = False
+    cfg.optimizer.reuse_grad_buf_for_mxfp8_param_ag = False
+
+    cfg.checkpoint.load = None
+    cfg.checkpoint.ckpt_format = "fsdp_dtensor"
+    return cfg
+
+
 def nemotron_3_nano_mtp_pretrain_8gpu_gb200_nvfp4_config() -> ConfigContainer:
     """Nemotron 3 Nano with MTP pretrain: 8× GB200, NVFP4."""
     cfg = nemotron_3_nano_pretrain_8gpu_gb200_nvfp4_config()
