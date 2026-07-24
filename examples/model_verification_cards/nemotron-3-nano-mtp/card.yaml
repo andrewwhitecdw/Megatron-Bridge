@@ -602,27 +602,33 @@ items:
     GB200:
       status: verified
       precision: fp8_mx
-      bridge_commit: 887cc28b462d0b61b30f2372079efd50cfeab023  # pragma: allowlist secret
+      bridge_commit: 039084be86393a4ae5e7282d01df3a516d0a266b  # pragma: allowlist secret
       command: >
         ./scripts/training/train.sh --wait --nodes 8 --gpus-per-node 4
+        --segment 8
         --recipe nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config
-        --mode pretrain --dataset mock --max_steps 10
+        --mode pretrain --dataset mock --max_steps 50
         tokenizer.tokenizer_model=PUBLIC_HF_ID_PENDING
         --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/fsdp
-        --save_interval 10 logger.log_interval=1 logger.log_throughput=true
+        --save_interval 50 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null dist.distributed_timeout_minutes=120
       last_verified: 2026-07-24
       metrics:
-        initial_loss: 12.191150
-        final_loss: 8.146253
-        last_10_steps_step_time_ms_avg: 12415.890
-        last_10_steps_model_tflops_per_gpu_avg: 9.110
+        initial_loss: 12.190510
+        final_loss: 1.746802
+        last_10_steps_step_time_ms_avg: 1565.970
+        last_10_steps_model_tflops_per_gpu_avg: 10.700
       expected_result: >
         On eight complete four-GPU GB200 nodes, the MXFP8 FSDP run completes
-        exactly 10 finite-loss optimizer steps with active MTP-1 and MTP-2
-        losses, no skipped or NaN iterations, and LM loss 12.191150 ->
-        8.146253. Steps 1-10, including first-step compilation, average
-        12,415.890 ms / 9.110 TFLOP/s/GPU. The step-10 fsdp_dtensor checkpoint
+        exactly 50 finite-loss optimizer steps in one segment-8 NVLink domain
+        with active MTP-1 and MTP-2 losses, no skipped or NaN iterations, and
+        LM loss 12.190510 -> 1.746802. Steps 41-50 average 1,565.970 ms /
+        10.700 TFLOP/s/GPU. This is 1.33% of the tuned non-FSDP BF16 result
+        (803.180 TFLOP/s/GPU), but is not an isolated FSDP-overhead comparison:
+        that baseline uses 8 GPUs, sequence length 8,192, GBS/MBS 512/2,
+        forced-balanced routing, and Transformer Engine CUDA graphs, while this
+        verification uses 32 GPUs, sequence length 512, GBS/MBS 32/1,
+        natural routing, and no CUDA graphs. The step-50 fsdp_dtensor checkpoint
         contains all 32 rank shards, metadata, run config, train state, and the
         latest-iteration marker.
 
