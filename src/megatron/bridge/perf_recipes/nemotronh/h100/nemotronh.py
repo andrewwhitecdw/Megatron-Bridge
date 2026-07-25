@@ -84,6 +84,7 @@ def nemotron_3_nano_pretrain_16gpu_h100_bf16_config() -> ConfigContainer:
 
     _benchmark_common(cfg)
     cfg.model.moe_flex_dispatcher_backend = "hybridep"
+    cfg.model.moe_hybridep_num_sms = 16
     # Keep process settings next to the recipe so users can see the exact benchmark environment.
     cfg.env_vars = {
         **COMMON_PERF_ENV_VARS,
@@ -136,6 +137,7 @@ def nemotron_3_nano_pretrain_16gpu_h100_fp8cs_config() -> ConfigContainer:
 
     _benchmark_common(cfg)
     cfg.model.moe_flex_dispatcher_backend = "hybridep"
+    cfg.model.moe_hybridep_num_sms = 16
     # Keep process settings next to the recipe so users can see the exact benchmark environment.
     cfg.env_vars = {
         **COMMON_PERF_ENV_VARS,

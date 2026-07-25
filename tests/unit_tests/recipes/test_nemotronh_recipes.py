@@ -147,6 +147,78 @@ def test_nemotron_3_nano_gb200_defers_vocab_size_to_training_tokenizer():
     assert cfg.model.vocab_size is None
 
 
+def test_nemotron_3_5_nano_h100_convergence_recipe_uses_perf_execution_policy():
+    """The H100 convergence recipe keeps safety checks while using the measured fast path."""
+    from megatron.bridge.recipes.nemotronh import nemotron_3_5_nano_pretrain_config
+    from megatron.bridge.utils.cuda_graph import cuda_graph_module_names
+
+    cfg = nemotron_3_5_nano_pretrain_config()
+
+    assert cfg.model.seq_length == 4096
+    assert cfg.dataset.seq_length == 4096
+    assert cfg.model.tensor_model_parallel_size == 1
+    assert cfg.model.pipeline_model_parallel_size == 1
+    assert cfg.model.sequence_parallel is False
+    assert cfg.model.expert_model_parallel_size == 8
+    assert cfg.train.global_batch_size == 1024
+    assert cfg.train.micro_batch_size == 1
+
+    assert cfg.model.moe_flex_dispatcher_backend == "hybridep"
+    assert cfg.model.moe_router_force_load_balancing is False
+    assert cfg.model.cuda_graph_impl == "transformer_engine"
+    assert cuda_graph_module_names(cfg.model) == ["attn", "mamba"]
+    assert cfg.model.recompute_granularity == "selective"
+    assert cfg.model.recompute_modules == ["moe", "layernorm"]
+
+    assert cfg.mixed_precision.grad_reduce_in_fp32 is False
+    assert cfg.ddp.grad_reduce_in_fp32 is False
+    assert cfg.ddp.check_for_nan_in_grad is True
+    assert cfg.ddp.check_for_large_grads is True
+    assert cfg.rerun_state_machine.check_for_nan_in_loss is True
+    assert cfg.checkpoint.save_interval == 200
+
+    assert cfg.tokenizer.tokenizer_type == "HuggingFaceTokenizer"
+    assert cfg.tokenizer.tokenizer_model == "nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16"
+    assert cfg.env_vars["NVLINK_DOMAIN_SIZE"] == 8
+    assert cfg.env_vars["USE_MNNVL"] == 0
+
+
+def test_nemotron_3_5_nano_gb200_convergence_recipe_uses_perf_execution_policy():
+    """The GB200 convergence recipe keeps safety checks while using the measured fast path."""
+    from megatron.bridge.recipes.nemotronh import nemotron_3_5_nano_gb200_pretrain_config
+    from megatron.bridge.utils.cuda_graph import cuda_graph_module_names
+
+    cfg = nemotron_3_5_nano_gb200_pretrain_config()
+
+    assert cfg.model.seq_length == 4096
+    assert cfg.dataset.seq_length == 4096
+    assert cfg.model.tensor_model_parallel_size == 1
+    assert cfg.model.pipeline_model_parallel_size == 1
+    assert cfg.model.sequence_parallel is False
+    assert cfg.model.expert_model_parallel_size == 8
+    assert cfg.train.global_batch_size == 1024
+    assert cfg.train.micro_batch_size == 2
+
+    assert cfg.model.moe_flex_dispatcher_backend == "hybridep"
+    assert cfg.model.moe_router_force_load_balancing is False
+    assert cfg.model.cuda_graph_impl == "transformer_engine"
+    assert cuda_graph_module_names(cfg.model) == ["attn", "mamba", "moe_router", "moe_preprocess"]
+    assert cfg.model.recompute_granularity is None
+    assert cfg.model.recompute_modules is None
+
+    assert cfg.mixed_precision.grad_reduce_in_fp32 is False
+    assert cfg.ddp.grad_reduce_in_fp32 is False
+    assert cfg.ddp.check_for_nan_in_grad is True
+    assert cfg.ddp.check_for_large_grads is True
+    assert cfg.rerun_state_machine.check_for_nan_in_loss is True
+    assert cfg.checkpoint.save_interval == 200
+
+    assert cfg.tokenizer.tokenizer_type == "HuggingFaceTokenizer"
+    assert cfg.tokenizer.tokenizer_model == "nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16"
+    assert cfg.env_vars["NVLINK_DOMAIN_SIZE"] == 72
+    assert cfg.env_vars["USE_MNNVL"] == 1
+
+
 def test_nemotron_nano_9b_v2_lora_defaults():
     """Test that Nemotron Nano 9B v2 LoRA has correct default parallelism."""
     from megatron.bridge.recipes.nemotronh import nemotron_nano_9b_v2_peft_config
