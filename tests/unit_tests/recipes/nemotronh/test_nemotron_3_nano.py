@@ -29,6 +29,7 @@ from inspect import signature
 from unittest.mock import Mock, patch
 
 import pytest
+import torch
 
 from megatron.bridge.models.hybrid.hybrid_provider import HybridModelProvider
 from megatron.bridge.recipes.nemotronh.h100 import nemotron_3_nano as recipe_module
@@ -144,9 +145,11 @@ class TestNemotron3NanoPretrain:
         assert config.scheduler.lr_warmup_iters == 333
 
         # Verify precision settings
-        assert config.optimizer.use_precision_aware_optimizer is False
-        assert config.optimizer.main_grads_dtype is not None
-        assert config.optimizer.main_params_dtype is not None
+        assert config.optimizer.use_precision_aware_optimizer is True
+        assert config.optimizer.main_grads_dtype == torch.bfloat16
+        assert config.optimizer.main_params_dtype == torch.float32
+        assert config.optimizer.exp_avg_dtype == torch.bfloat16
+        assert config.optimizer.exp_avg_sq_dtype == torch.bfloat16
 
     def test_pretrain_config_checkpoint_settings(self):
         """Test checkpoint settings for pretrain config."""

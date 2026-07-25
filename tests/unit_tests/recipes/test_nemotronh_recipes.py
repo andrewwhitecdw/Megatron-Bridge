@@ -173,6 +173,7 @@ def test_nemotron_3_5_nano_h100_convergence_recipe_uses_perf_execution_policy():
     assert cfg.model.recompute_modules == ["moe", "layernorm"]
 
     assert cfg.mixed_precision.grad_reduce_in_fp32 is False
+    assert cfg.optimizer.use_precision_aware_optimizer is True
     assert cfg.ddp.grad_reduce_in_fp32 is False
     assert cfg.ddp.check_for_nan_in_grad is True
     assert cfg.ddp.check_for_large_grads is True

@@ -63,7 +63,7 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
     """Return a pre-training config for Nemotron 3 Nano (30B-A3B MoE).
 
     This is a MoE (Mixture of Experts) model with the following default parallelism:
-    - TP=1, PP=1, EP=8, SP=False
+    - TP=2, PP=1, ETP=2, EP=4, SP=True
     - HybridEP enabled for MoE token dispatch
 
     Returns:
@@ -112,8 +112,6 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
         moe_token_dispatcher_type="alltoall",
         moe_permute_fusion=True,
         moe_shared_expert_overlap=True,
-        # Shard dense and expert weights across pairs so the BF16 optimizer
-        # state fits on one eight-H100 node.
         tensor_model_parallel_size=2,
         pipeline_model_parallel_size=1,
         pipeline_dtype=torch.bfloat16,
@@ -185,11 +183,14 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
     cfg.model.moe_router_padding_for_fp8 = False
 
     # Optimizer Precision Settings
-    cfg.optimizer.use_precision_aware_optimizer = False
-    cfg.optimizer.main_grads_dtype = torch.float32
+    # EP consumes the full eight-GPU world, so no DP axis remains for optimizer
+    # sharding. Keep FP32 master parameters while storing gradients and moments
+    # in BF16 so the tuned TP1/EP8 topology fits on a single H100 node.
+    cfg.optimizer.use_precision_aware_optimizer = True
+    cfg.optimizer.main_grads_dtype = torch.bfloat16
     cfg.optimizer.main_params_dtype = torch.float32
-    cfg.optimizer.exp_avg_dtype = torch.float32
-    cfg.optimizer.exp_avg_sq_dtype = torch.float32
+    cfg.optimizer.exp_avg_dtype = torch.bfloat16
+    cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
     cfg.mixed_precision = get_mixed_precision_config(cfg.mixed_precision)
     cfg.mixed_precision.grad_reduce_in_fp32 = False
 

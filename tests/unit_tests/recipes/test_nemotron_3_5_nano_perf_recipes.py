@@ -137,6 +137,7 @@ def test_h100_perf_recipe_topology(recipe_factory: Callable[[], ConfigContainer]
     assert cfg.model.seq_length == 8192
     assert cfg.dataset.seq_length == 8192
     assert cfg.model.moe_hybridep_num_sms == 16
+    assert cfg.optimizer.use_precision_aware_optimizer is False
     assert cfg.env_vars["NVLINK_DOMAIN_SIZE"] == 8
     assert cfg.env_vars["USE_MNNVL"] == 0
 

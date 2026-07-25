@@ -48,6 +48,14 @@ def nemotron_3_nano_pretrain_config() -> ConfigContainer:
     cfg.model.recompute_modules = None
     cfg.model.recompute_method = None
     cfg.model.recompute_num_layers = None
+    # Preserve the optimizer-state precision used by the measured performance
+    # recipes; the single-node H100 library recipe uses reduced-precision state
+    # only because EP=8 leaves no data-parallel optimizer-sharding axis.
+    cfg.optimizer.use_precision_aware_optimizer = False
+    cfg.optimizer.main_grads_dtype = torch.float32
+    cfg.optimizer.main_params_dtype = torch.float32
+    cfg.optimizer.exp_avg_dtype = torch.float32
+    cfg.optimizer.exp_avg_sq_dtype = torch.float32
     return cfg
 
 
