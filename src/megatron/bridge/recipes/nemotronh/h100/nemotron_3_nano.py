@@ -63,7 +63,7 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
     """Return a pre-training config for Nemotron 3 Nano (30B-A3B MoE).
 
     This is a MoE (Mixture of Experts) model with the following default parallelism:
-    - TP=4, PP=1, ETP=4, EP=2, SP=True
+    - TP=1, PP=1, ETP=1, EP=8, SP=False
     - HybridEP enabled for MoE token dispatch
 
     Returns:
@@ -112,14 +112,14 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
         moe_token_dispatcher_type="alltoall",
         moe_permute_fusion=True,
         moe_shared_expert_overlap=True,
-        tensor_model_parallel_size=4,
+        tensor_model_parallel_size=1,
         pipeline_model_parallel_size=1,
         pipeline_dtype=torch.bfloat16,
         virtual_pipeline_model_parallel_size=None,
         context_parallel_size=1,
-        sequence_parallel=True,
-        expert_tensor_parallel_size=4,
-        expert_model_parallel_size=2,
+        sequence_parallel=False,
+        expert_tensor_parallel_size=1,
+        expert_model_parallel_size=8,
     )
     # Tokenizer (--tokenizer-model)
     cfg.tokenizer.tokenizer_model = _NEMOTRON_3_NANO_MODEL_ID
@@ -183,14 +183,14 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
     cfg.model.moe_router_padding_for_fp8 = False
 
     # Optimizer Precision Settings
-    # Keep FP32 master parameters while storing gradients and moments in BF16
-    # so the TP4/EP2 convergence topology and scoped CUDA graphs fit on one
-    # eight-GPU H100 node.
-    cfg.optimizer.use_precision_aware_optimizer = True
-    cfg.optimizer.main_grads_dtype = torch.bfloat16
+    # Match the measured BF16 performance recipe. The 16-GPU convergence
+    # workload provides DP=2, so distributed optimizer state remains sharded
+    # while retaining full FP32 optimizer precision.
+    cfg.optimizer.use_precision_aware_optimizer = False
+    cfg.optimizer.main_grads_dtype = torch.float32
     cfg.optimizer.main_params_dtype = torch.float32
-    cfg.optimizer.exp_avg_dtype = torch.bfloat16
-    cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
+    cfg.optimizer.exp_avg_dtype = torch.float32
+    cfg.optimizer.exp_avg_sq_dtype = torch.float32
     cfg.mixed_precision = get_mixed_precision_config(cfg.mixed_precision)
     cfg.mixed_precision.grad_reduce_in_fp32 = False
 

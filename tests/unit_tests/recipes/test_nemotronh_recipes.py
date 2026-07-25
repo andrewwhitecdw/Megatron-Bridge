@@ -23,6 +23,7 @@ import importlib
 from typing import Callable
 
 import pytest
+import torch
 
 from megatron.bridge.training.utils.omegaconf_utils import OverridesError, process_config_with_overrides
 from tests.unit_tests.recipes.recipe_test_utils import patch_recipe_module_global
@@ -156,11 +157,11 @@ def test_nemotron_3_5_nano_h100_convergence_recipe_uses_perf_execution_policy():
 
     assert cfg.model.seq_length == 4096
     assert cfg.dataset.seq_length == 4096
-    assert cfg.model.tensor_model_parallel_size == 4
+    assert cfg.model.tensor_model_parallel_size == 1
     assert cfg.model.pipeline_model_parallel_size == 1
-    assert cfg.model.sequence_parallel is True
-    assert cfg.model.expert_tensor_parallel_size == 4
-    assert cfg.model.expert_model_parallel_size == 2
+    assert cfg.model.sequence_parallel is False
+    assert cfg.model.expert_tensor_parallel_size == 1
+    assert cfg.model.expert_model_parallel_size == 8
     assert cfg.train.global_batch_size == 1024
     assert cfg.train.micro_batch_size == 1
 
@@ -173,7 +174,11 @@ def test_nemotron_3_5_nano_h100_convergence_recipe_uses_perf_execution_policy():
     assert cfg.model.recompute_modules == ["moe", "layernorm"]
 
     assert cfg.mixed_precision.grad_reduce_in_fp32 is False
-    assert cfg.optimizer.use_precision_aware_optimizer is True
+    assert cfg.optimizer.use_precision_aware_optimizer is False
+    assert cfg.optimizer.main_grads_dtype == torch.float32
+    assert cfg.optimizer.main_params_dtype == torch.float32
+    assert cfg.optimizer.exp_avg_dtype == torch.float32
+    assert cfg.optimizer.exp_avg_sq_dtype == torch.float32
     assert cfg.ddp.grad_reduce_in_fp32 is False
     assert cfg.ddp.check_for_nan_in_grad is True
     assert cfg.ddp.check_for_large_grads is True

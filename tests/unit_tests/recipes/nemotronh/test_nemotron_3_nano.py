@@ -60,13 +60,13 @@ class TestNemotron3NanoPretrain:
         assert isinstance(config.model, HybridModelProvider)
 
         # Check model configuration defaults
-        assert config.model.tensor_model_parallel_size == 4
+        assert config.model.tensor_model_parallel_size == 1
         assert config.model.pipeline_model_parallel_size == 1
-        assert config.model.sequence_parallel is True
+        assert config.model.sequence_parallel is False
 
         # Check expert parallelism defaults
-        assert config.model.expert_tensor_parallel_size == 4
-        assert config.model.expert_model_parallel_size == 2
+        assert config.model.expert_tensor_parallel_size == 1
+        assert config.model.expert_model_parallel_size == 8
 
         # Check training configuration
         assert config.train.train_iters == 39735
@@ -145,11 +145,11 @@ class TestNemotron3NanoPretrain:
         assert config.scheduler.lr_warmup_iters == 333
 
         # Verify precision settings
-        assert config.optimizer.use_precision_aware_optimizer is True
-        assert config.optimizer.main_grads_dtype == torch.bfloat16
+        assert config.optimizer.use_precision_aware_optimizer is False
+        assert config.optimizer.main_grads_dtype == torch.float32
         assert config.optimizer.main_params_dtype == torch.float32
-        assert config.optimizer.exp_avg_dtype == torch.bfloat16
-        assert config.optimizer.exp_avg_sq_dtype == torch.bfloat16
+        assert config.optimizer.exp_avg_dtype == torch.float32
+        assert config.optimizer.exp_avg_sq_dtype == torch.float32
 
     def test_pretrain_config_checkpoint_settings(self):
         """Test checkpoint settings for pretrain config."""
