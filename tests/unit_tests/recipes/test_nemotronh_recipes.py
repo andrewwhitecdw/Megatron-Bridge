@@ -156,10 +156,11 @@ def test_nemotron_3_5_nano_h100_convergence_recipe_uses_perf_execution_policy():
 
     assert cfg.model.seq_length == 4096
     assert cfg.dataset.seq_length == 4096
-    assert cfg.model.tensor_model_parallel_size == 1
+    assert cfg.model.tensor_model_parallel_size == 2
     assert cfg.model.pipeline_model_parallel_size == 1
-    assert cfg.model.sequence_parallel is False
-    assert cfg.model.expert_model_parallel_size == 8
+    assert cfg.model.sequence_parallel is True
+    assert cfg.model.expert_tensor_parallel_size == 2
+    assert cfg.model.expert_model_parallel_size == 4
     assert cfg.train.global_batch_size == 1024
     assert cfg.train.micro_batch_size == 1
 

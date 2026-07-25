@@ -112,15 +112,16 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
         moe_token_dispatcher_type="alltoall",
         moe_permute_fusion=True,
         moe_shared_expert_overlap=True,
-        # Parallelism
-        tensor_model_parallel_size=1,
+        # Shard dense and expert weights across pairs so the BF16 optimizer
+        # state fits on one eight-H100 node.
+        tensor_model_parallel_size=2,
         pipeline_model_parallel_size=1,
         pipeline_dtype=torch.bfloat16,
         virtual_pipeline_model_parallel_size=None,
         context_parallel_size=1,
-        sequence_parallel=False,
-        expert_tensor_parallel_size=1,
-        expert_model_parallel_size=8,
+        sequence_parallel=True,
+        expert_tensor_parallel_size=2,
+        expert_model_parallel_size=4,
     )
     # Tokenizer (--tokenizer-model)
     cfg.tokenizer.tokenizer_model = _NEMOTRON_3_NANO_MODEL_ID
