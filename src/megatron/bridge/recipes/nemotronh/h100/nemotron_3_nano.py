@@ -63,7 +63,7 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
     """Return a pre-training config for Nemotron 3 Nano (30B-A3B MoE).
 
     This is a MoE (Mixture of Experts) model with the following default parallelism:
-    - TP=2, PP=1, ETP=2, EP=4, SP=True
+    - TP=4, PP=1, ETP=4, EP=2, SP=True
     - HybridEP enabled for MoE token dispatch
 
     Returns:
@@ -112,14 +112,14 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
         moe_token_dispatcher_type="alltoall",
         moe_permute_fusion=True,
         moe_shared_expert_overlap=True,
-        tensor_model_parallel_size=2,
+        tensor_model_parallel_size=4,
         pipeline_model_parallel_size=1,
         pipeline_dtype=torch.bfloat16,
         virtual_pipeline_model_parallel_size=None,
         context_parallel_size=1,
         sequence_parallel=True,
-        expert_tensor_parallel_size=2,
-        expert_model_parallel_size=4,
+        expert_tensor_parallel_size=4,
+        expert_model_parallel_size=2,
     )
     # Tokenizer (--tokenizer-model)
     cfg.tokenizer.tokenizer_model = _NEMOTRON_3_NANO_MODEL_ID

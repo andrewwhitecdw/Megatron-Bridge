@@ -60,13 +60,13 @@ class TestNemotron3NanoPretrain:
         assert isinstance(config.model, HybridModelProvider)
 
         # Check model configuration defaults
-        assert config.model.tensor_model_parallel_size == 2
+        assert config.model.tensor_model_parallel_size == 4
         assert config.model.pipeline_model_parallel_size == 1
         assert config.model.sequence_parallel is True
 
         # Check expert parallelism defaults
-        assert config.model.expert_tensor_parallel_size == 2
-        assert config.model.expert_model_parallel_size == 4
+        assert config.model.expert_tensor_parallel_size == 4
+        assert config.model.expert_model_parallel_size == 2
 
         # Check training configuration
         assert config.train.train_iters == 39735
