@@ -7,7 +7,9 @@ summary: >
   use tuned canonical performance recipes; timing and throughput metrics from
   functional training items remain sanity checks rather than optimized
   performance results. Nemotron 3.5 Nano support verification covers
-  conversion, inference, and training on H100 and GB200.
+  conversion, inference, and training on H100 and GB200. The
+  model.hf_id/--hf-model and model.hf_revision/--hf-revision values are
+  non-functional placeholders pending publication.
 verification_index:
   model_level:
     verified:
