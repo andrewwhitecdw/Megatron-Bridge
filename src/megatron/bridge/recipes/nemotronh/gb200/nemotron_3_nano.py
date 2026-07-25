@@ -73,7 +73,7 @@ def nemotron_3_nano_pretrain_8gpu_gb200_bf16_config() -> ConfigContainer:
     cfg.model.moe_router_force_load_balancing = False
 
     cfg.train.train_iters = 39735
-    cfg.train.global_batch_size = 1024
+    cfg.train.global_batch_size = 512
     cfg.train.micro_batch_size = 2
     cfg.train.manual_gc = True
     cfg.train.manual_gc_interval = 100
