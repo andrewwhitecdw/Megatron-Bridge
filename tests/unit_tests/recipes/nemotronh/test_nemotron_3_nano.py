@@ -13,10 +13,10 @@
 # limitations under the License.
 
 """
-Unit tests for Nemotron 3 Nano recipe configuration builders.
+Unit tests for Nemotron 3 and 3.5 Nano recipe configuration builders.
 
 Tests cover:
-- Separate standard and MTP pretrain configurations
+- Separate Nemotron 3 and 3.5 pretrain configurations
 - SFT configuration with Hugging Face-derived model architecture
 - PEFT configuration with Hugging Face-derived model architecture, LoRA, and DoRA
 - MoE-specific settings (DeepEP, expert parallelism)
@@ -33,9 +33,9 @@ import pytest
 from megatron.bridge.models.hybrid.hybrid_provider import HybridModelProvider
 from megatron.bridge.recipes.nemotronh.h100 import nemotron_3_nano as recipe_module
 from megatron.bridge.recipes.nemotronh.nemotron_3_nano import (
-    nemotron_3_nano_mtp_peft_config,
-    nemotron_3_nano_mtp_pretrain_config,
-    nemotron_3_nano_mtp_sft_config,
+    nemotron_3_5_nano_peft_config,
+    nemotron_3_5_nano_pretrain_config,
+    nemotron_3_5_nano_sft_config,
     nemotron_3_nano_peft_config,
     nemotron_3_nano_pretrain_config,
     nemotron_3_nano_sft_config,
@@ -48,7 +48,7 @@ class TestNemotron3NanoPretrain:
     """Test cases for Nemotron 3 Nano pretrain recipe.
 
     Most customization is done by modifying the returned ConfigContainer after
-    creation; MTP uses a separate recipe.
+    creation; Nemotron 3.5 uses a separate recipe.
     """
 
     def test_pretrain_config_default_parameters(self):
@@ -91,10 +91,10 @@ class TestNemotron3NanoPretrain:
         assert config.model.mtp_num_layers == 0
         assert config.model.mtp_hybrid_override_pattern is None
 
-    def test_mtp_pretrain_config(self):
-        """The dedicated MTP recipe enables the repeated Nano MTP head."""
+    def test_nemotron_3_5_pretrain_config(self):
+        """The Nemotron 3.5 recipe enables the repeated Nano MTP head."""
         base_config = nemotron_3_nano_pretrain_config()
-        config = nemotron_3_nano_mtp_pretrain_config()
+        config = nemotron_3_5_nano_pretrain_config()
 
         assert config.model.mtp_num_layers == 2
         assert config.model.mtp_hybrid_override_pattern == "*E"
@@ -103,12 +103,13 @@ class TestNemotron3NanoPretrain:
         assert config.model.mtp_loss_scaling_factor == 0.3
         assert config.model.calculate_per_token_loss == base_config.model.calculate_per_token_loss
         assert config.model.use_te_rng_tracker == base_config.model.use_te_rng_tracker
-        assert config.tokenizer.tokenizer_model == recipe_module._NEMOTRON_3_NANO_MTP_MODEL_ID
+        assert recipe_module._NEMOTRON_3_5_NANO_MODEL_ID == ("nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16")
+        assert config.tokenizer.tokenizer_model == recipe_module._NEMOTRON_3_5_NANO_MODEL_ID
 
     def test_pretrain_recipes_do_not_expose_mtp_flag(self):
-        """Standard and MTP pretraining use distinct parameterless factories."""
+        """Nemotron 3 and 3.5 pretraining use distinct parameterless factories."""
         assert "enable_mtp" not in signature(nemotron_3_nano_pretrain_config).parameters
-        assert "enable_mtp" not in signature(nemotron_3_nano_mtp_pretrain_config).parameters
+        assert "enable_mtp" not in signature(nemotron_3_5_nano_pretrain_config).parameters
 
     def test_pretrain_config_deepep_enabled(self):
         """Test that DeepEP is enabled by default for MoE pretrain."""
@@ -160,7 +161,7 @@ class TestNemotron3NanoPretrain:
 class TestNemotron3NanoSft:
     """Test cases for Nemotron 3 Nano SFT recipe.
 
-    Standard and MTP recipes derive their model architecture from their
+    Nemotron 3 and 3.5 recipes derive their model architecture from their
     respective hard-coded Hugging Face repositories.
     """
 
@@ -250,8 +251,8 @@ class TestNemotron3NanoSft:
         [
             (nemotron_3_nano_sft_config, recipe_module._NEMOTRON_3_NANO_MODEL_ID, 0),
             (nemotron_3_nano_peft_config, recipe_module._NEMOTRON_3_NANO_MODEL_ID, 0),
-            (nemotron_3_nano_mtp_sft_config, recipe_module._NEMOTRON_3_NANO_MTP_MODEL_ID, 2),
-            (nemotron_3_nano_mtp_peft_config, recipe_module._NEMOTRON_3_NANO_MTP_MODEL_ID, 2),
+            (nemotron_3_5_nano_sft_config, recipe_module._NEMOTRON_3_5_NANO_MODEL_ID, 2),
+            (nemotron_3_5_nano_peft_config, recipe_module._NEMOTRON_3_5_NANO_MODEL_ID, 2),
         ],
     )
     def test_finetuning_derives_mtp_from_hf_model(self, recipe_factory, model_id, mtp_num_layers):
@@ -279,11 +280,11 @@ class TestNemotron3NanoSft:
         assert config.tokenizer.tokenizer_model == model_id
 
     def test_finetuning_recipes_do_not_expose_model_id(self):
-        """Model selection is fixed by separate standard and MTP factories."""
+        """Model selection is fixed by separate Nemotron 3 and 3.5 factories."""
         assert not signature(nemotron_3_nano_sft_config).parameters
-        assert not signature(nemotron_3_nano_mtp_sft_config).parameters
+        assert not signature(nemotron_3_5_nano_sft_config).parameters
         assert set(signature(nemotron_3_nano_peft_config).parameters) == {"peft_scheme"}
-        assert set(signature(nemotron_3_nano_mtp_peft_config).parameters) == {"peft_scheme"}
+        assert set(signature(nemotron_3_5_nano_peft_config).parameters) == {"peft_scheme"}
 
     def test_sft_config_with_custom_directory(self):
         """Test custom directory configuration for SFT."""

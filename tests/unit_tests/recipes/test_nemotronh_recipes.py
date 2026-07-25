@@ -147,45 +147,6 @@ def test_nemotron_3_nano_gb200_defers_vocab_size_to_training_tokenizer():
     assert cfg.model.vocab_size is None
 
 
-def test_nemotron_3_nano_mtp_gb200_fsdp_verification_defaults():
-    """The GB200 FSDP verification recipe must retain its bounded 32-GPU contract."""
-    cfg = _nemotronh_module.nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config()
-
-    assert cfg.model.mtp_num_layers == 2
-    assert cfg.model.mtp_hybrid_override_pattern == "*E"
-    assert cfg.model.mtp_use_repeated_layer is True
-    assert cfg.model.keep_mtp_spec_in_bf16 is True
-    assert cfg.model.mtp_loss_scaling_factor == 0.3
-    assert cfg.tokenizer.tokenizer_model == "placeholder"
-
-    assert cfg.model.seq_length == 512
-    assert cfg.dataset.seq_length == 512
-    assert cfg.train.train_iters == 50
-    assert cfg.train.global_batch_size == 32
-    assert cfg.train.micro_batch_size == 1
-    assert cfg.model.tensor_model_parallel_size == 1
-    assert cfg.model.pipeline_model_parallel_size == 1
-    assert cfg.model.expert_model_parallel_size == 8
-    assert cfg.model.context_parallel_size == 1
-    assert cfg.model.sequence_parallel is False
-
-    assert cfg.mixed_precision.fp8 == "e4m3"
-    assert cfg.mixed_precision.fp8_recipe == "mxfp8"
-    assert cfg.mixed_precision.fp8_param_gather is True
-    assert cfg.mixed_precision.reuse_grad_buf_for_mxfp8_param_ag is False
-
-    assert cfg.dist.use_megatron_fsdp is True
-    assert cfg.ddp.use_megatron_fsdp is True
-    assert cfg.ddp.num_distributed_optimizer_instances == 1
-    assert cfg.ddp.data_parallel_sharding_strategy == "optim_grads_params"
-    assert cfg.ddp.average_in_collective is False
-    assert cfg.checkpoint.ckpt_format == "fsdp_dtensor"
-    assert cfg.scheduler.lr_decay_iters == 50
-    assert cfg.checkpoint.save_interval == 50
-    assert cfg.env_vars["CUDA_DEVICE_MAX_CONNECTIONS"] == 32
-    assert cfg.env_vars["NUM_OF_HYBRID_EP_RANKS_PER_NVLINK_DOMAIN"] == 8
-
-
 def test_nemotron_nano_9b_v2_lora_defaults():
     """Test that Nemotron Nano 9B v2 LoRA has correct default parallelism."""
     from megatron.bridge.recipes.nemotronh import nemotron_nano_9b_v2_peft_config

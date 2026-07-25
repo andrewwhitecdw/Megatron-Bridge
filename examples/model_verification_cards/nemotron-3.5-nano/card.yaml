@@ -1,12 +1,12 @@
-# Agent-readable model verification card.
+# Agent-readable model verification card for Nemotron 3.5 Nano.
 # status: unverified | verified | unsupported | not_applicable
 
-title: nemotron_3_nano_mtp
+title: nemotron_3_5_nano
 summary: >
   Performance scope: pretrain_performance.H100 and pretrain_performance.GB200
   use tuned canonical performance recipes; timing and throughput metrics from
   functional training items remain sanity checks rather than optimized
-  performance results. Nemotron 3 Nano with MTP support verification covers
+  performance results. Nemotron 3.5 Nano support verification covers
   conversion, inference, and training on H100 and GB200.
 verification_index:
   model_level:
@@ -28,7 +28,7 @@ verification_index:
   fsdp:
     GB200: verified
 model:
-  hf_id: PUBLIC_HF_ID_PENDING
+  hf_id: nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
   hf_revision: PUBLIC_HF_REVISION_PENDING
   architecture: NemotronHForCausalLM
   min_transformers_version: "5.8.1"
@@ -42,9 +42,9 @@ items:
     precision: bf16
     command: >
       ./scripts/conversion/convert.sh import --executor slurm --device cpu --nodes 1
-      --hf-model PUBLIC_HF_ID_PENDING
+      --hf-model nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
       --hf-revision PUBLIC_HF_REVISION_PENDING
-      --megatron-path work/model-verification/nemotron-3-nano-mtp/cpu-megatron
+      --megatron-path work/model-verification/nemotron-3.5-nano/cpu-megatron
       --torch-dtype bfloat16
     last_verified: 2026-07-23
     expected_result: >
@@ -59,9 +59,9 @@ items:
     command: >
       ./scripts/conversion/convert.sh import --executor slurm --device gpu
       --nodes 1 --gpus-per-node 8 --tp 1 --pp 1 --ep 8 --etp 1
-      --hf-model PUBLIC_HF_ID_PENDING
+      --hf-model nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
       --hf-revision PUBLIC_HF_REVISION_PENDING
-      --megatron-path work/model-verification/nemotron-3-nano-mtp/imported-megatron
+      --megatron-path work/model-verification/nemotron-3.5-nano/imported-megatron
       --torch-dtype bfloat16
     last_verified: 2026-07-23
     expected_result: >
@@ -76,10 +76,10 @@ items:
     bridge_commit: 7edd7c7f68bcdd2b30cbaff426ece2ee0da9deb5  # pragma: allowlist secret
     command: >
       ./scripts/conversion/convert.sh export --executor slurm --device cpu --nodes 1
-      --hf-model PUBLIC_HF_ID_PENDING
+      --hf-model nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
       --hf-revision PUBLIC_HF_REVISION_PENDING
-      --megatron-path work/model-verification/nemotron-3-nano-mtp/cpu-megatron/iter_0000000
-      --hf-path work/model-verification/nemotron-3-nano-mtp/cpu-hf-export
+      --megatron-path work/model-verification/nemotron-3.5-nano/cpu-megatron/iter_0000000
+      --hf-path work/model-verification/nemotron-3.5-nano/cpu-hf-export
       --torch-dtype bfloat16
     last_verified: 2026-07-23
     expected_result: >
@@ -93,10 +93,10 @@ items:
     command: >
       ./scripts/conversion/convert.sh export --executor slurm --device gpu
       --nodes 1 --gpus-per-node 8 --tp 1 --pp 1 --ep 8 --etp 1
-      --hf-model PUBLIC_HF_ID_PENDING
+      --hf-model nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
       --hf-revision PUBLIC_HF_REVISION_PENDING
-      --megatron-path work/model-verification/nemotron-3-nano-mtp/imported-megatron/iter_0000000
-      --hf-path work/model-verification/nemotron-3-nano-mtp/hf-export
+      --megatron-path work/model-verification/nemotron-3.5-nano/imported-megatron/iter_0000000
+      --hf-path work/model-verification/nemotron-3.5-nano/hf-export
       --torch-dtype bfloat16 --distributed-save
     last_verified: 2026-07-23
     expected_result: >
@@ -110,9 +110,9 @@ items:
     command: >
       uv run python -m torch.distributed.run --standalone --nproc_per_node=8
       examples/conversion/compare_hf_and_megatron/compare.py
-      --hf_model_path PUBLIC_HF_ID_PENDING
+      --hf_model_path nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
       --hf-revision PUBLIC_HF_REVISION_PENDING
-      --megatron_model_path work/model-verification/nemotron-3-nano-mtp/imported-megatron/iter_0000000
+      --megatron_model_path work/model-verification/nemotron-3.5-nano/imported-megatron/iter_0000000
       --tp 1 --pp 1 --ep 8 --etp 1
       --prompt "The capital of France is the city of"
     last_verified: 2026-07-23
@@ -128,9 +128,9 @@ items:
     command: >
       uv run python -m torch.distributed.run --standalone --nproc_per_node=8
       examples/conversion/hf_to_megatron_generate_text.py
-      --hf_model_path PUBLIC_HF_ID_PENDING
+      --hf_model_path nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
       --hf-revision PUBLIC_HF_REVISION_PENDING
-      --megatron_model_path work/model-verification/nemotron-3-nano-mtp/imported-megatron/iter_0000000
+      --megatron_model_path work/model-verification/nemotron-3.5-nano/imported-megatron/iter_0000000
       --tp 1 --pp 1 --ep 8 --etp 1
       --prompt "The capital of France is" --max_new_tokens 2
     last_verified: 2026-07-23
@@ -146,11 +146,11 @@ items:
         moe_dispatcher: deepep
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 8
-        --recipe nemotron_3_nano_mtp_pretrain_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_pretrain_8gpu_h100_bf16_config
         --mode pretrain --dataset megatron-indexed --seq_length 4096 --max_steps 20
         --lr 3e-4 --min_lr 3e-5 --warmup_iters 8
         'dataset.blend=[["work/data/rp2/perp_middle/middle_01_text_document"],null]'
-        dataset.path_to_cache=work/cache/nemotron-3-nano-mtp-h100/rp2
+        dataset.path_to_cache=work/cache/nemotron-3.5-nano-h100/rp2
         rng.seed=1234 dataset.random_seed=1234 scheduler.lr_decay_iters=20
         validation.eval_iters=0 validation.eval_interval=0
         ddp.check_for_nan_in_grad=true ddp.check_for_large_grads=true
@@ -160,7 +160,7 @@ items:
         'model.recompute_modules=[moe,layernorm,core_attn,mlp]'
         model.recompute_method=null model.recompute_num_layers=null
         checkpoint.load=null checkpoint.async_save=false
-        --save_dir work/model-verification/nemotron-3-nano-mtp-h100/pretrain-reference
+        --save_dir work/model-verification/nemotron-3.5-nano-h100/pretrain-reference
         --save_interval 10 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null dist.distributed_timeout_minutes=120
       last_verified: 2026-07-24
@@ -183,11 +183,11 @@ items:
         moe_dispatcher: hybridep
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 4
-        --recipe nemotron_3_nano_mtp_pretrain_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_pretrain_8gpu_h100_bf16_config
         --mode pretrain --dataset megatron-indexed --seq_length 4096 --max_steps 20
         --lr 3e-4 --min_lr 3e-5 --warmup_iters 8
         'dataset.blend=[["work/data/rp2/perp_middle/middle_01_text_document"],null]'
-        dataset.path_to_cache=work/cache/nemotron-3-nano-mtp-gb200/rp2
+        dataset.path_to_cache=work/cache/nemotron-3.5-nano-gb200/rp2
         rng.seed=1234 dataset.random_seed=1234 scheduler.lr_decay_iters=20
         validation.eval_iters=0 validation.eval_interval=0
         ddp.check_for_nan_in_grad=true ddp.check_for_large_grads=true
@@ -195,7 +195,7 @@ items:
         model.moe_router_force_load_balancing=false
         model.moe_flex_dispatcher_backend=hybridep
         checkpoint.load=null checkpoint.async_save=false
-        --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/pretrain-reference
+        --save_dir work/model-verification/nemotron-3.5-nano-gb200/pretrain-reference
         --save_interval 10 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null dist.distributed_timeout_minutes=120
       last_verified: 2026-07-23
@@ -219,12 +219,12 @@ items:
         moe_dispatcher: deepep
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 8
-        --recipe nemotron_3_nano_mtp_sft_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_sft_8gpu_h100_bf16_config
         --mode sft --dataset openmathinstruct2 --max_steps 100 --seq_length 4096
         --lr 5e-6 --min_lr 0 --warmup_iters 10
         --tensor_model_parallel_size 2 --expert_tensor_parallel_size 1
         --expert_model_parallel_size 8
-        --pretrained_checkpoint work/model-verification/nemotron-3-nano-mtp-h100/imported-megatron/iter_0000000
+        --pretrained_checkpoint work/model-verification/nemotron-3.5-nano-h100/imported-megatron/iter_0000000
         'dataset.hf_dataset.load_kwargs={revision:"469216e3f46f4dacf476b382e192485ea51a143e"}'
         dataset.enable_offline_packing=true
         'dataset.offline_packing_specs={packed_sequence_size:4096,pad_seq_to_mult:2}'
@@ -236,7 +236,7 @@ items:
         scheduler.lr_decay_iters=100 validation.eval_iters=0 validation.eval_interval=0
         checkpoint.load=null checkpoint.save_optim=false checkpoint.save_rng=false
         checkpoint.async_save=false
-        --save_dir work/model-verification/nemotron-3-nano-mtp-h100/sft-checkpoints
+        --save_dir work/model-verification/nemotron-3.5-nano-h100/sft-checkpoints
         --save_interval 100 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null
       last_verified: 2026-07-24
@@ -260,12 +260,12 @@ items:
         moe_dispatcher: hybridep
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 4
-        --recipe nemotron_3_nano_mtp_sft_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_sft_8gpu_h100_bf16_config
         --mode sft --dataset openmathinstruct2 --max_steps 100 --seq_length 4096
         --lr 5e-6 --min_lr 0 --warmup_iters 10
         --tensor_model_parallel_size 2 --expert_tensor_parallel_size 1
         --expert_model_parallel_size 8
-        --pretrained_checkpoint work/model-verification/nemotron-3-nano-mtp-gb200/imported-megatron/iter_0000000
+        --pretrained_checkpoint work/model-verification/nemotron-3.5-nano-gb200/imported-megatron/iter_0000000
         model.moe_flex_dispatcher_backend=hybridep
         'dataset.hf_dataset.load_kwargs={revision:"469216e3f46f4dacf476b382e192485ea51a143e"}'
         dataset.enable_offline_packing=true
@@ -278,7 +278,7 @@ items:
         scheduler.lr_decay_iters=100 validation.eval_iters=0 validation.eval_interval=0
         checkpoint.load=null checkpoint.save_optim=false checkpoint.save_rng=false
         checkpoint.async_save=false
-        --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/sft-checkpoints
+        --save_dir work/model-verification/nemotron-3.5-nano-gb200/sft-checkpoints
         --save_interval 100 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null
       last_verified: 2026-07-23
@@ -302,15 +302,15 @@ items:
         - >
           ./scripts/conversion/convert.sh export --executor slurm --device gpu
           --nodes 2 --gpus-per-node 8 --tp 2 --pp 1 --ep 8 --etp 1
-          --hf-model PUBLIC_HF_ID_PENDING
+          --hf-model nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
           --hf-revision PUBLIC_HF_REVISION_PENDING
-          --megatron-path work/model-verification/nemotron-3-nano-mtp-h100/sft-checkpoints/iter_0000100
-          --hf-path work/model-verification/nemotron-3-nano-mtp-h100/sft-hf-export
+          --megatron-path work/model-verification/nemotron-3.5-nano-h100/sft-checkpoints/iter_0000100
+          --hf-path work/model-verification/nemotron-3.5-nano-h100/sft-hf-export
           --torch-dtype bfloat16 --export-weight-dtype bfloat16
         - >
           uv run python
           skills/create-model-verification-card/scripts/verify_hf_inference.py
-          --hf-model work/model-verification/nemotron-3-nano-mtp-h100/sft-hf-export
+          --hf-model work/model-verification/nemotron-3.5-nano-h100/sft-hf-export
           --prompt "Solve briefly: If 3x + 5 = 20, what is x?"
           --max-new-tokens 45 --chat-template --disable-thinking
       last_verified: 2026-07-24
@@ -324,15 +324,15 @@ items:
         - >
           ./scripts/conversion/convert.sh export --executor slurm --device gpu
           --nodes 2 --gpus-per-node 4 --tp 2 --pp 1 --ep 8 --etp 1
-          --hf-model PUBLIC_HF_ID_PENDING
+          --hf-model nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16
           --hf-revision PUBLIC_HF_REVISION_PENDING
-          --megatron-path work/model-verification/nemotron-3-nano-mtp-gb200/sft-checkpoints/iter_0000100
-          --hf-path work/model-verification/nemotron-3-nano-mtp-gb200/sft-hf-export
+          --megatron-path work/model-verification/nemotron-3.5-nano-gb200/sft-checkpoints/iter_0000100
+          --hf-path work/model-verification/nemotron-3.5-nano-gb200/sft-hf-export
           --torch-dtype bfloat16 --export-weight-dtype bfloat16
         - >
           uv run python
           skills/create-model-verification-card/scripts/verify_hf_inference.py
-          --hf-model work/model-verification/nemotron-3-nano-mtp-gb200/sft-hf-export
+          --hf-model work/model-verification/nemotron-3.5-nano-gb200/sft-hf-export
           --prompt "Solve briefly: If 3x + 5 = 20, what is x?"
           --max-new-tokens 45 --chat-template --disable-thinking
       last_verified: 2026-07-23
@@ -348,12 +348,12 @@ items:
         moe_dispatcher: deepep
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 8
-        --recipe nemotron_3_nano_mtp_sft_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_sft_8gpu_h100_bf16_config
         --mode sft --dataset openmathinstruct2 --max_steps 100 --seq_length 32768
         --lr 5e-6 --min_lr 0 --warmup_iters 10
         --tensor_model_parallel_size 2 --context_parallel_size 2
         --expert_tensor_parallel_size 1 --expert_model_parallel_size 8
-        --pretrained_checkpoint work/model-verification/nemotron-3-nano-mtp-h100/imported-megatron/iter_0000000
+        --pretrained_checkpoint work/model-verification/nemotron-3.5-nano-h100/imported-megatron/iter_0000000
         'dataset.hf_dataset.load_kwargs={revision:"469216e3f46f4dacf476b382e192485ea51a143e"}'
         dataset.enable_offline_packing=true
         'dataset.offline_packing_specs={packed_sequence_size:32768,pad_seq_to_mult:4}'
@@ -366,7 +366,7 @@ items:
         scheduler.lr_decay_iters=100 validation.eval_iters=0 validation.eval_interval=0
         checkpoint.load=null checkpoint.save_optim=false checkpoint.save_rng=false
         checkpoint.async_save=false
-        --save_dir work/model-verification/nemotron-3-nano-mtp-h100/long-sft-checkpoints
+        --save_dir work/model-verification/nemotron-3.5-nano-h100/long-sft-checkpoints
         --save_interval 50 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null
       last_verified: 2026-07-24
@@ -393,12 +393,12 @@ items:
         moe_dispatcher: hybridep
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 4
-        --recipe nemotron_3_nano_mtp_sft_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_sft_8gpu_h100_bf16_config
         --mode sft --dataset openmathinstruct2 --max_steps 100 --seq_length 32768
         --lr 5e-6 --min_lr 0 --warmup_iters 10
         --context_parallel_size 2 --expert_tensor_parallel_size 1
         --expert_model_parallel_size 8
-        --pretrained_checkpoint work/model-verification/nemotron-3-nano-mtp-gb200/imported-megatron/iter_0000000
+        --pretrained_checkpoint work/model-verification/nemotron-3.5-nano-gb200/imported-megatron/iter_0000000
         model.moe_flex_dispatcher_backend=hybridep
         'dataset.hf_dataset.load_kwargs={revision:"469216e3f46f4dacf476b382e192485ea51a143e"}'
         dataset.enable_offline_packing=true
@@ -412,7 +412,7 @@ items:
         scheduler.lr_decay_iters=100 validation.eval_iters=0 validation.eval_interval=0
         checkpoint.load=null checkpoint.save_optim=false checkpoint.save_rng=false
         checkpoint.async_save=false
-        --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/long-sft-checkpoints
+        --save_dir work/model-verification/nemotron-3.5-nano-gb200/long-sft-checkpoints
         --save_interval 100 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null
       last_verified: 2026-07-23
@@ -438,12 +438,12 @@ items:
         moe_dispatcher: deepep
       command: >
         ./scripts/training/train.sh --nodes 1 --gpus-per-node 8
-        --recipe nemotron_3_nano_mtp_peft_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_peft_8gpu_h100_bf16_config
         --mode lora --dataset openmathinstruct2 --max_steps 100 --seq_length 4096
         --lr 1e-4 --min_lr 0 --warmup_iters 10
         --tensor_model_parallel_size 2 --expert_tensor_parallel_size 1
         --expert_model_parallel_size 8
-        --pretrained_checkpoint work/model-verification/nemotron-3-nano-mtp-h100/imported-megatron/iter_0000000
+        --pretrained_checkpoint work/model-verification/nemotron-3.5-nano-h100/imported-megatron/iter_0000000
         'dataset.hf_dataset.load_kwargs={revision:"469216e3f46f4dacf476b382e192485ea51a143e"}'
         dataset.enable_offline_packing=true
         'dataset.offline_packing_specs={packed_sequence_size:4096,pad_seq_to_mult:2}'
@@ -451,7 +451,7 @@ items:
         ddp.overlap_param_gather=false optimizer.overlap_param_gather=false
         scheduler.lr_decay_iters=100 validation.eval_iters=0 validation.eval_interval=0
         checkpoint.load=null checkpoint.async_save=false
-        --save_dir work/model-verification/nemotron-3-nano-mtp-h100/peft-checkpoints
+        --save_dir work/model-verification/nemotron-3.5-nano-h100/peft-checkpoints
         --save_interval 100 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null
       last_verified: 2026-07-24
@@ -478,12 +478,12 @@ items:
         moe_dispatcher: hybridep
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 4
-        --recipe nemotron_3_nano_mtp_peft_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_peft_8gpu_h100_bf16_config
         --mode lora --dataset openmathinstruct2 --max_steps 100 --seq_length 4096
         --lr 1e-4 --min_lr 0 --warmup_iters 10
         --tensor_model_parallel_size 2 --expert_tensor_parallel_size 1
         --expert_model_parallel_size 8
-        --pretrained_checkpoint work/model-verification/nemotron-3-nano-mtp-gb200/imported-megatron/iter_0000000
+        --pretrained_checkpoint work/model-verification/nemotron-3.5-nano-gb200/imported-megatron/iter_0000000
         model.moe_flex_dispatcher_backend=hybridep
         'dataset.hf_dataset.load_kwargs={revision:"469216e3f46f4dacf476b382e192485ea51a143e"}'
         dataset.enable_offline_packing=true
@@ -492,7 +492,7 @@ items:
         ddp.overlap_param_gather=false optimizer.overlap_param_gather=false
         scheduler.lr_decay_iters=100 validation.eval_iters=0 validation.eval_interval=0
         checkpoint.load=null checkpoint.async_save=false
-        --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/peft-checkpoints
+        --save_dir work/model-verification/nemotron-3.5-nano-gb200/peft-checkpoints
         --save_interval 100 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null
       last_verified: 2026-07-23
@@ -517,11 +517,11 @@ items:
       depends_on: pretrain
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 8
-        --recipe nemotron_3_nano_mtp_pretrain_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_pretrain_8gpu_h100_bf16_config
         --mode pretrain --dataset megatron-indexed --seq_length 4096 --max_steps 20
         --lr 3e-4 --min_lr 3e-5 --warmup_iters 8
         'dataset.blend=[["work/data/rp2/perp_middle/middle_01_text_document"],null]'
-        dataset.path_to_cache=work/cache/nemotron-3-nano-mtp-h100/rp2
+        dataset.path_to_cache=work/cache/nemotron-3.5-nano-h100/rp2
         rng.seed=1234 dataset.random_seed=1234 scheduler.lr_decay_iters=20
         validation.eval_iters=0 validation.eval_interval=0
         ddp.check_for_nan_in_grad=true ddp.check_for_large_grads=true
@@ -531,9 +531,9 @@ items:
         'model.recompute_modules=[moe,layernorm,core_attn,mlp]'
         model.recompute_method=null model.recompute_num_layers=null
         checkpoint.async_save=false
-        --load_dir work/model-verification/nemotron-3-nano-mtp-h100/pretrain-reference
+        --load_dir work/model-verification/nemotron-3.5-nano-h100/pretrain-reference
         checkpoint.ckpt_step=10
-        --save_dir work/model-verification/nemotron-3-nano-mtp-h100/pretrain-resumed
+        --save_dir work/model-verification/nemotron-3.5-nano-h100/pretrain-resumed
         --save_interval 10 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null dist.distributed_timeout_minutes=120
       last_verified: 2026-07-24
@@ -562,20 +562,20 @@ items:
       depends_on: pretrain
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 4
-        --recipe nemotron_3_nano_mtp_pretrain_8gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_pretrain_8gpu_h100_bf16_config
         --mode pretrain --dataset megatron-indexed --seq_length 4096 --max_steps 20
         --lr 3e-4 --min_lr 3e-5 --warmup_iters 8
         'dataset.blend=[["work/data/rp2/perp_middle/middle_01_text_document"],null]'
-        dataset.path_to_cache=work/cache/nemotron-3-nano-mtp-gb200/rp2
+        dataset.path_to_cache=work/cache/nemotron-3.5-nano-gb200/rp2
         rng.seed=1234 dataset.random_seed=1234 scheduler.lr_decay_iters=20
         validation.eval_iters=0 validation.eval_interval=0
         ddp.check_for_nan_in_grad=true ddp.check_for_large_grads=true
         rerun_state_machine.check_for_nan_in_loss=true
         model.moe_router_force_load_balancing=false
         model.moe_flex_dispatcher_backend=hybridep checkpoint.async_save=false
-        --load_dir work/model-verification/nemotron-3-nano-mtp-gb200/pretrain-reference
+        --load_dir work/model-verification/nemotron-3.5-nano-gb200/pretrain-reference
         checkpoint.ckpt_step=10
-        --save_dir work/model-verification/nemotron-3-nano-mtp-gb200/pretrain-resumed
+        --save_dir work/model-verification/nemotron-3.5-nano-gb200/pretrain-resumed
         --save_interval 10 logger.log_interval=1 logger.log_throughput=true
         logger.tensorboard_dir=null dist.distributed_timeout_minutes=120
       last_verified: 2026-07-23
@@ -610,9 +610,8 @@ items:
       command: >
         ./scripts/training/train.sh --wait --nodes 2 --gpus-per-node 4
         --segment 2
-        --recipe nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config
+        --recipe nemotron_3_5_nano_pretrain_8gpu_gb200_fp8mx_fsdp_config
         --mode pretrain --max_steps 20
-        tokenizer.tokenizer_model=PUBLIC_HF_ID_PENDING
       last_verified: 2026-07-24
       metrics:
         initial_loss: 12.18152
@@ -649,7 +648,7 @@ items:
       precision: bf16
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 8
-        --recipe nemotron_3_nano_mtp_pretrain_16gpu_h100_bf16_config
+        --recipe nemotron_3_5_nano_pretrain_16gpu_h100_bf16_config
         --max_steps 50
       last_verified: 2026-07-23
       metrics:
@@ -669,7 +668,7 @@ items:
       precision: bf16
       command: >
         ./scripts/training/train.sh --nodes 2 --gpus-per-node 4
-        --recipe nemotron_3_nano_mtp_pretrain_8gpu_gb200_bf16_config
+        --recipe nemotron_3_5_nano_pretrain_8gpu_gb200_bf16_config
         --max_steps 50
       last_verified: 2026-07-23
       metrics:

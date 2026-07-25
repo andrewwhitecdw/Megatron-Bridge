@@ -30,7 +30,7 @@ from megatron.bridge.training.config import ConfigContainer
 
 
 _NEMOTRON_3_NANO_MODEL_ID = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"
-_NEMOTRON_3_NANO_MTP_MODEL_ID = "placeholder"
+_NEMOTRON_3_5_NANO_MODEL_ID = "nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16"
 
 
 def _nemotron_3_nano_finetune_model(model_id: str) -> HybridModelProvider:
@@ -227,15 +227,15 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
     return cfg
 
 
-def nemotron_3_nano_mtp_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
-    """Return a pre-training config for Nemotron 3 Nano with MTP."""
+def nemotron_3_5_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
+    """Return a pre-training config for Nemotron 3.5 Nano."""
     cfg = nemotron_3_nano_pretrain_8gpu_h100_bf16_config()
     cfg.model.mtp_num_layers = 2
     cfg.model.mtp_hybrid_override_pattern = "*E"
     cfg.model.mtp_use_repeated_layer = True
     cfg.model.keep_mtp_spec_in_bf16 = True
     cfg.model.mtp_loss_scaling_factor = 0.3
-    cfg.tokenizer.tokenizer_model = _NEMOTRON_3_NANO_MTP_MODEL_ID
+    cfg.tokenizer.tokenizer_model = _NEMOTRON_3_5_NANO_MODEL_ID
     return cfg
 
 
@@ -245,7 +245,7 @@ def nemotron_3_nano_mtp_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
 
 
 def _nemotron_3_nano_sft_8gpu_h100_bf16_config(model_id: str) -> ConfigContainer:
-    """Build a full SFT config for the selected Nemotron 3 Nano model.
+    """Build a full SFT config for the selected Nemotron Nano model.
 
     Default parallelism: TP=1, PP=1, EP=8, SP=False
 
@@ -253,7 +253,7 @@ def _nemotron_3_nano_sft_8gpu_h100_bf16_config(model_id: str) -> ConfigContainer
         model_id: Hugging Face model identifier used to derive the model architecture.
 
     Returns:
-        ConfigContainer with all settings pre-configured for Nemotron 3 Nano SFT.
+        ConfigContainer with all settings pre-configured for Nemotron Nano SFT.
     """
     cfg = _sft_common()
 
@@ -379,9 +379,9 @@ def nemotron_3_nano_sft_8gpu_h100_bf16_config() -> ConfigContainer:
     return _nemotron_3_nano_sft_8gpu_h100_bf16_config(_NEMOTRON_3_NANO_MODEL_ID)
 
 
-def nemotron_3_nano_mtp_sft_8gpu_h100_bf16_config() -> ConfigContainer:
-    """Return a full SFT config for Nemotron 3 Nano with MTP."""
-    return _nemotron_3_nano_sft_8gpu_h100_bf16_config(_NEMOTRON_3_NANO_MTP_MODEL_ID)
+def nemotron_3_5_nano_sft_8gpu_h100_bf16_config() -> ConfigContainer:
+    """Return a full SFT config for Nemotron 3.5 Nano."""
+    return _nemotron_3_nano_sft_8gpu_h100_bf16_config(_NEMOTRON_3_5_NANO_MODEL_ID)
 
 
 # =============================================================================
@@ -393,7 +393,7 @@ def _nemotron_3_nano_peft_8gpu_h100_bf16_config(
     model_id: str,
     peft_scheme: str | PEFT = "lora",
 ) -> ConfigContainer:
-    """Build a PEFT config for the selected Nemotron 3 Nano model.
+    """Build a PEFT config for the selected Nemotron Nano model.
 
     Default parallelism: TP=1, PP=1, EP=8, SP=False
 
@@ -402,7 +402,7 @@ def _nemotron_3_nano_peft_8gpu_h100_bf16_config(
         peft_scheme: PEFT scheme - "lora", "dora", or a custom PEFT instance.
 
     Returns:
-        ConfigContainer with all settings pre-configured for Nemotron 3 Nano PEFT.
+        ConfigContainer with all settings pre-configured for Nemotron Nano PEFT.
     """
     cfg = _peft_common()
 
@@ -545,15 +545,15 @@ def nemotron_3_nano_peft_8gpu_h100_bf16_config(peft_scheme: str | PEFT = "lora")
     return _nemotron_3_nano_peft_8gpu_h100_bf16_config(_NEMOTRON_3_NANO_MODEL_ID, peft_scheme)
 
 
-def nemotron_3_nano_mtp_peft_8gpu_h100_bf16_config(peft_scheme: str | PEFT = "lora") -> ConfigContainer:
-    """Return a PEFT config for Nemotron 3 Nano with MTP."""
-    return _nemotron_3_nano_peft_8gpu_h100_bf16_config(_NEMOTRON_3_NANO_MTP_MODEL_ID, peft_scheme)
+def nemotron_3_5_nano_peft_8gpu_h100_bf16_config(peft_scheme: str | PEFT = "lora") -> ConfigContainer:
+    """Return a PEFT config for Nemotron 3.5 Nano."""
+    return _nemotron_3_nano_peft_8gpu_h100_bf16_config(_NEMOTRON_3_5_NANO_MODEL_ID, peft_scheme)
 
 
 __all__ = [
-    "nemotron_3_nano_mtp_peft_8gpu_h100_bf16_config",
-    "nemotron_3_nano_mtp_pretrain_8gpu_h100_bf16_config",
-    "nemotron_3_nano_mtp_sft_8gpu_h100_bf16_config",
+    "nemotron_3_5_nano_peft_8gpu_h100_bf16_config",
+    "nemotron_3_5_nano_pretrain_8gpu_h100_bf16_config",
+    "nemotron_3_5_nano_sft_8gpu_h100_bf16_config",
     "nemotron_3_nano_peft_8gpu_h100_bf16_config",
     "nemotron_3_nano_pretrain_8gpu_h100_bf16_config",
     "nemotron_3_nano_sft_8gpu_h100_bf16_config",

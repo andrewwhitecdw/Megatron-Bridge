@@ -13,16 +13,15 @@
 # limitations under the License.
 
 # Nemotron Nano v2 models
-# Nemotron 3 Nano models
+# Nemotron 3 and 3.5 Nano models
 from megatron.bridge.recipes.nemotronh.gb200 import (
     nemotron_3_nano_gb200_pretrain_config,
-    nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config,
     nemotron_3_nano_pretrain_8gpu_gb200_bf16_config,
 )
 from megatron.bridge.recipes.nemotronh.nemotron_3_nano import (
-    nemotron_3_nano_mtp_peft_config,
-    nemotron_3_nano_mtp_pretrain_config,
-    nemotron_3_nano_mtp_sft_config,
+    nemotron_3_5_nano_peft_config,
+    nemotron_3_5_nano_pretrain_config,
+    nemotron_3_5_nano_sft_config,
     nemotron_3_nano_peft_config,
     nemotron_3_nano_pretrain_config,
     nemotron_3_nano_sft_config,
@@ -92,15 +91,14 @@ __all__ = [
     "nemotron_nano_12b_v2_sft_config",
     "nemotron_nano_9b_v2_peft_config",
     "nemotron_nano_12b_v2_peft_config",
-    # Nemotron 3 Nano models
-    "nemotron_3_nano_mtp_peft_config",
-    "nemotron_3_nano_mtp_pretrain_config",
-    "nemotron_3_nano_mtp_sft_config",
+    # Nemotron 3 and 3.5 Nano models
+    "nemotron_3_5_nano_peft_config",
+    "nemotron_3_5_nano_pretrain_config",
+    "nemotron_3_5_nano_sft_config",
     "nemotron_3_nano_pretrain_config",
     "nemotron_3_nano_sft_config",
     "nemotron_3_nano_peft_config",
     "nemotron_3_nano_gb200_pretrain_config",
-    "nemotron_3_nano_mtp_pretrain_32gpu_gb200_fp8mx_fsdp_config",
     "nemotron_3_nano_pretrain_8gpu_gb200_bf16_config",
     # Nemotron 3 Nano 4B model
     "nemotron_3_nano_4b_pretrain_config",

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Unit tests for Nemotron 3 Nano with MTP performance recipes."""
+"""Unit tests for Nemotron 3.5 Nano performance recipe exports."""
 
 from collections.abc import Callable
 from inspect import signature
@@ -20,12 +20,12 @@ from inspect import signature
 import pytest
 
 from megatron.bridge.perf_recipes.nemotronh import (
-    nemotron_3_nano_mtp_pretrain_8gpu_gb200_bf16_config,
-    nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_config,
-    nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config,
-    nemotron_3_nano_mtp_pretrain_8gpu_gb200_nvfp4_config,
-    nemotron_3_nano_mtp_pretrain_16gpu_h100_bf16_config,
-    nemotron_3_nano_mtp_pretrain_16gpu_h100_fp8cs_config,
+    nemotron_3_5_nano_pretrain_8gpu_gb200_bf16_config,
+    nemotron_3_5_nano_pretrain_8gpu_gb200_fp8mx_config,
+    nemotron_3_5_nano_pretrain_8gpu_gb200_fp8mx_fsdp_config,
+    nemotron_3_5_nano_pretrain_8gpu_gb200_nvfp4_config,
+    nemotron_3_5_nano_pretrain_16gpu_h100_bf16_config,
+    nemotron_3_5_nano_pretrain_16gpu_h100_fp8cs_config,
     nemotron_3_nano_pretrain_8gpu_gb200_bf16_config,
     nemotron_3_nano_pretrain_8gpu_gb200_fp8mx_config,
     nemotron_3_nano_pretrain_8gpu_gb200_nvfp4_config,
@@ -37,48 +37,50 @@ from megatron.bridge.training.config import ConfigContainer
 
 pytestmark = pytest.mark.unit
 
+_NEMOTRON_3_5_NANO_MODEL_ID = "nvidia/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16"
+
 _H100_RECIPES = (
-    nemotron_3_nano_mtp_pretrain_16gpu_h100_bf16_config,
-    nemotron_3_nano_mtp_pretrain_16gpu_h100_fp8cs_config,
+    nemotron_3_5_nano_pretrain_16gpu_h100_bf16_config,
+    nemotron_3_5_nano_pretrain_16gpu_h100_fp8cs_config,
 )
 _GB200_RECIPES = (
-    nemotron_3_nano_mtp_pretrain_8gpu_gb200_bf16_config,
-    nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_config,
-    nemotron_3_nano_mtp_pretrain_8gpu_gb200_nvfp4_config,
+    nemotron_3_5_nano_pretrain_8gpu_gb200_bf16_config,
+    nemotron_3_5_nano_pretrain_8gpu_gb200_fp8mx_config,
+    nemotron_3_5_nano_pretrain_8gpu_gb200_nvfp4_config,
 )
-_GB200_FSDP_RECIPES = (nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config,)
-_NON_MTP_RECIPES = (
+_GB200_FSDP_RECIPES = (nemotron_3_5_nano_pretrain_8gpu_gb200_fp8mx_fsdp_config,)
+_NEMOTRON_3_RECIPES = (
     nemotron_3_nano_pretrain_16gpu_h100_bf16_config,
     nemotron_3_nano_pretrain_16gpu_h100_fp8cs_config,
     nemotron_3_nano_pretrain_8gpu_gb200_bf16_config,
     nemotron_3_nano_pretrain_8gpu_gb200_fp8mx_config,
     nemotron_3_nano_pretrain_8gpu_gb200_nvfp4_config,
 )
-_MTP_BASE_RECIPE_PAIRS = (
+_NEMOTRON_3_5_BASE_RECIPE_PAIRS = (
     (
-        nemotron_3_nano_mtp_pretrain_16gpu_h100_bf16_config,
+        nemotron_3_5_nano_pretrain_16gpu_h100_bf16_config,
         nemotron_3_nano_pretrain_16gpu_h100_bf16_config,
     ),
     (
-        nemotron_3_nano_mtp_pretrain_16gpu_h100_fp8cs_config,
+        nemotron_3_5_nano_pretrain_16gpu_h100_fp8cs_config,
         nemotron_3_nano_pretrain_16gpu_h100_fp8cs_config,
     ),
     (
-        nemotron_3_nano_mtp_pretrain_8gpu_gb200_bf16_config,
+        nemotron_3_5_nano_pretrain_8gpu_gb200_bf16_config,
         nemotron_3_nano_pretrain_8gpu_gb200_bf16_config,
     ),
     (
-        nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_config,
+        nemotron_3_5_nano_pretrain_8gpu_gb200_fp8mx_config,
         nemotron_3_nano_pretrain_8gpu_gb200_fp8mx_config,
     ),
     (
-        nemotron_3_nano_mtp_pretrain_8gpu_gb200_nvfp4_config,
+        nemotron_3_5_nano_pretrain_8gpu_gb200_nvfp4_config,
         nemotron_3_nano_pretrain_8gpu_gb200_nvfp4_config,
     ),
 )
 
 
-@pytest.mark.parametrize("recipe_factory", _NON_MTP_RECIPES, ids=lambda recipe: recipe.__name__)
+@pytest.mark.parametrize("recipe_factory", _NEMOTRON_3_RECIPES, ids=lambda recipe: recipe.__name__)
 def test_standard_perf_recipes_do_not_expose_mtp_flag(recipe_factory: Callable[[], ConfigContainer]) -> None:
     """Standard performance recipes remain parameterless and non-MTP."""
     assert "enable_mtp" not in signature(recipe_factory).parameters
@@ -91,7 +93,7 @@ def test_standard_perf_recipes_do_not_expose_mtp_flag(recipe_factory: Callable[[
     ids=lambda recipe: recipe.__name__,
 )
 def test_perf_recipes_enable_mtp(recipe_factory: Callable[[], ConfigContainer]) -> None:
-    """Each MTP performance variant preserves the shared Nano MTP block."""
+    """Each Nemotron 3.5 performance recipe preserves the shared MTP block."""
     cfg = recipe_factory()
 
     assert cfg.model.mtp_num_layers == 2
@@ -101,30 +103,31 @@ def test_perf_recipes_enable_mtp(recipe_factory: Callable[[], ConfigContainer]) 
     assert cfg.model.mtp_loss_scaling_factor == 0.3
     assert cfg.model.moe_router_force_load_balancing is True
     assert cfg.model.moe_flex_dispatcher_backend == "hybridep"
+    assert cfg.tokenizer.tokenizer_model == _NEMOTRON_3_5_NANO_MODEL_ID
 
 
 @pytest.mark.parametrize(
-    ("mtp_recipe_factory", "base_recipe_factory"),
-    _MTP_BASE_RECIPE_PAIRS,
-    ids=[mtp_recipe.__name__ for mtp_recipe, _ in _MTP_BASE_RECIPE_PAIRS],
+    ("recipe_factory", "base_recipe_factory"),
+    _NEMOTRON_3_5_BASE_RECIPE_PAIRS,
+    ids=[recipe.__name__ for recipe, _ in _NEMOTRON_3_5_BASE_RECIPE_PAIRS],
 )
-def test_perf_recipes_inherit_non_mtp_policy(
-    mtp_recipe_factory: Callable[[], ConfigContainer],
+def test_nemotron_3_5_perf_recipes_inherit_nemotron_3_policy(
+    recipe_factory: Callable[[], ConfigContainer],
     base_recipe_factory: Callable[[], ConfigContainer],
 ) -> None:
-    """MTP variants inherit environment, loss normalization, and RNG policy."""
-    mtp_cfg = mtp_recipe_factory()
+    """Nemotron 3.5 variants inherit environment, loss normalization, and RNG policy."""
+    cfg = recipe_factory()
     base_cfg = base_recipe_factory()
 
-    assert mtp_cfg.env_vars == base_cfg.env_vars
-    assert mtp_cfg.model.calculate_per_token_loss == base_cfg.model.calculate_per_token_loss
-    assert mtp_cfg.model.use_te_rng_tracker == base_cfg.model.use_te_rng_tracker
-    assert mtp_cfg.tokenizer.tokenizer_model != base_cfg.tokenizer.tokenizer_model
+    assert cfg.env_vars == base_cfg.env_vars
+    assert cfg.model.calculate_per_token_loss == base_cfg.model.calculate_per_token_loss
+    assert cfg.model.use_te_rng_tracker == base_cfg.model.use_te_rng_tracker
+    assert cfg.tokenizer.tokenizer_model != base_cfg.tokenizer.tokenizer_model
 
 
 @pytest.mark.parametrize("recipe_factory", _H100_RECIPES, ids=lambda recipe: recipe.__name__)
 def test_h100_perf_recipe_topology(recipe_factory: Callable[[], ConfigContainer]) -> None:
-    """H100 MTP variants retain the existing Nano performance topology."""
+    """H100 Nemotron 3.5 variants retain the existing Nano performance topology."""
     cfg = recipe_factory()
 
     assert cfg.model.expert_model_parallel_size == 8
@@ -137,7 +140,7 @@ def test_h100_perf_recipe_topology(recipe_factory: Callable[[], ConfigContainer]
 
 @pytest.mark.parametrize("recipe_factory", _GB200_RECIPES, ids=lambda recipe: recipe.__name__)
 def test_gb200_perf_recipe_topology(recipe_factory: Callable[[], ConfigContainer]) -> None:
-    """GB200 MTP variants retain the existing Nano performance topology."""
+    """GB200 Nemotron 3.5 variants retain the existing Nano performance topology."""
     cfg = recipe_factory()
 
     assert cfg.model.expert_model_parallel_size == 8
@@ -150,7 +153,7 @@ def test_gb200_perf_recipe_topology(recipe_factory: Callable[[], ConfigContainer
 
 def test_gb200_fsdp_perf_recipe_defaults() -> None:
     """The GB200 FSDP variant retains its measured 8-GPU performance settings."""
-    cfg = nemotron_3_nano_mtp_pretrain_8gpu_gb200_fp8mx_fsdp_config()
+    cfg = nemotron_3_5_nano_pretrain_8gpu_gb200_fp8mx_fsdp_config()
 
     assert cfg.train.global_batch_size == 384
     assert cfg.train.micro_batch_size == 3

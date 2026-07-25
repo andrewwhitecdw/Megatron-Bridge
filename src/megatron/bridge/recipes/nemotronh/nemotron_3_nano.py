@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ruff: noqa: F401
-"""Compatibility aliases for legacy recipe names."""
+"""Hardware-agnostic aliases for Nemotron 3 and 3.5 Nano recipes."""
 
 from __future__ import annotations
 
 from megatron.bridge.recipes.nemotronh.h100.nemotron_3_nano import (
-    nemotron_3_nano_mtp_peft_8gpu_h100_bf16_config as nemotron_3_nano_mtp_peft_config,
+    nemotron_3_5_nano_peft_8gpu_h100_bf16_config as nemotron_3_5_nano_peft_config,
 )
 from megatron.bridge.recipes.nemotronh.h100.nemotron_3_nano import (
-    nemotron_3_nano_mtp_pretrain_8gpu_h100_bf16_config as nemotron_3_nano_mtp_pretrain_config,
+    nemotron_3_5_nano_pretrain_8gpu_h100_bf16_config as nemotron_3_5_nano_pretrain_config,
 )
 from megatron.bridge.recipes.nemotronh.h100.nemotron_3_nano import (
-    nemotron_3_nano_mtp_sft_8gpu_h100_bf16_config as nemotron_3_nano_mtp_sft_config,
+    nemotron_3_5_nano_sft_8gpu_h100_bf16_config as nemotron_3_5_nano_sft_config,
 )
 from megatron.bridge.recipes.nemotronh.h100.nemotron_3_nano import (
     nemotron_3_nano_peft_8gpu_h100_bf16_config as nemotron_3_nano_peft_config,
@@ -37,9 +37,9 @@ from megatron.bridge.recipes.nemotronh.h100.nemotron_3_nano import (
 
 
 __all__ = [
-    "nemotron_3_nano_mtp_peft_config",
-    "nemotron_3_nano_mtp_pretrain_config",
-    "nemotron_3_nano_mtp_sft_config",
+    "nemotron_3_5_nano_peft_config",
+    "nemotron_3_5_nano_pretrain_config",
+    "nemotron_3_5_nano_sft_config",
     "nemotron_3_nano_pretrain_config",
     "nemotron_3_nano_sft_config",
     "nemotron_3_nano_peft_config",
