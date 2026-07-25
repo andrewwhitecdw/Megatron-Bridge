@@ -183,9 +183,9 @@ def nemotron_3_nano_pretrain_8gpu_h100_bf16_config() -> ConfigContainer:
     cfg.model.moe_router_padding_for_fp8 = False
 
     # Optimizer Precision Settings
-    # EP consumes the full eight-GPU world, so no DP axis remains for optimizer
-    # sharding. Keep FP32 master parameters while storing gradients and moments
-    # in BF16 so the tuned TP1/EP8 topology fits on a single H100 node.
+    # Keep FP32 master parameters while storing gradients and moments in BF16
+    # so the TP4/EP2 convergence topology and scoped CUDA graphs fit on one
+    # eight-GPU H100 node.
     cfg.optimizer.use_precision_aware_optimizer = True
     cfg.optimizer.main_grads_dtype = torch.bfloat16
     cfg.optimizer.main_params_dtype = torch.float32
